@@ -19,7 +19,7 @@ import { Class } from "../Class";
 export const MxCellEditor = Class.extend({
   documentMode: document["documentMode"],
 
-  init: function (graph) {
+  $$init: function (graph) {
     mxCellEditor.apply(this, [graph]);
   },
 

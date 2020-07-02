@@ -25,7 +25,7 @@ import { Class } from "../Class";
 export const MxEdgeHandler = Class.extend({
   documentMode: document["documentMode"],
 
-  init: function (state) {
+  $$init: function (state) {
     mxEdgeHandler.apply(this, [state]);
   },
 
@@ -229,7 +229,7 @@ export const MxEdgeHandler = Class.extend({
 
   updateLinkHint: mxVertexHandler.prototype["updateLinkHint"],
 
-  $init: function () {
+  init: function () {
     const edgeHandlerInit = mxEdgeHandler.prototype.init;
 
     edgeHandlerInit.apply(this, []);
