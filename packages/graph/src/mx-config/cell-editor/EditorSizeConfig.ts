@@ -2,7 +2,10 @@ import mx from "@mxgraph-app/mx";
 const { mxCellEditor, mxRectangle } = mx;
 
 export class EditorSizeConfig {
-  configure() {}
+  configure() {
+    this.setGetMinimumSize();
+    return mxCellEditor;
+  }
 
   graph: any;
 

@@ -26,19 +26,20 @@ export class InPlaceEditorConfig {
 
   documentMode: any; // document.documentMode
 
-  textarea: any;
-  switchSelectionState: any;
+  // textarea: any;
+  // switchSelectionState: any;
 
   setStartEditing() {
-    const { textarea, graph } = this;
     /**
      * HTML in-place editor
      */
     mxCellEditor.prototype.escapeCancelsEditing = false;
 
     var mxCellEditorStartEditing = mxCellEditor.prototype.startEditing;
-    mxCellEditor.prototype.startEditing = (cell, _trigger) => {
-      mxCellEditorStartEditing.apply(this, arguments);
+    mxCellEditor.prototype.startEditing = function (cell, ...args) {
+      const ctx: any = this;
+      const { textarea, graph, switchSelectionState } = ctx;
+      mxCellEditorStartEditing.apply(this, [cell, ...args]);
 
       // Overrides class in case of HTML content to add
       // dashed borders for divs and table cells
@@ -89,13 +90,16 @@ export class InPlaceEditorConfig {
   }
 
   setInstallListeners() {
-    const { documentMode, textarea } = this;
+    const { documentMode } = this;
     /**
      * HTML in-place editor
      */
-    var cellEditorInstallListeners = mxCellEditor.prototype.installListeners;
-    mxCellEditor.prototype.installListeners = (_elt) => {
-      cellEditorInstallListeners.apply(this, arguments);
+
+    mxCellEditor.prototype.installListeners = function (...args) {
+      var cellEditorInstallListeners = mxCellEditor.prototype.installListeners;
+      cellEditorInstallListeners.apply(this, [...args]);
+      const ctx: any = this;
+      const { textarea } = ctx;
 
       // Adds a reference from the clone to the original node, recursively
       function reference(node, clone) {

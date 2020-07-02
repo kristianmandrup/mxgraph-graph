@@ -16,9 +16,9 @@ export class ConstraintHandlerConfig {
     var mxConstraintHandlerUpdate = mxConstraintHandler.prototype.update;
     const { isKeepFocusEvent, reset } = mxConstraintHandler.prototype;
 
-    mxConstraintHandler.prototype.update = (me, _source) => {
+    mxConstraintHandler.prototype.update = (me, source, ...args) => {
       if (isKeepFocusEvent(me) || !mxEvent.isAltDown(me.getEvent())) {
-        mxConstraintHandlerUpdate.apply(this, arguments);
+        mxConstraintHandlerUpdate.apply(this, [me, source, ...args]);
       } else {
         reset();
       }

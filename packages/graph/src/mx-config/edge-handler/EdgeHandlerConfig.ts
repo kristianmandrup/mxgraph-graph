@@ -30,8 +30,8 @@ export class VertexHandlerConfig {
      */
     var edgeHandlerMouseMove = mxEdgeHandler.prototype.mouseMove;
     const { linkHint, graph } = this;
-    mxEdgeHandler.prototype.mouseMove = (_sender, _me) => {
-      edgeHandlerMouseMove.apply(this, arguments);
+    mxEdgeHandler.prototype.mouseMove = (...args) => {
+      edgeHandlerMouseMove.apply(this, [...args]);
 
       if (
         graph.graphHandler != null &&
@@ -50,8 +50,8 @@ export class VertexHandlerConfig {
      */
     var edgeHandlerMouseUp = mxEdgeHandler.prototype.mouseUp;
     const proto: any = mxEdgeHandler.prototype;
-    mxEdgeHandler.prototype.mouseUp = (_sender, _me) => {
-      edgeHandlerMouseUp.apply(this, arguments);
+    mxEdgeHandler.prototype.mouseUp = (...args) => {
+      edgeHandlerMouseUp.apply(this, [...args]);
       const { linkHint } = proto;
 
       if (linkHint != null && linkHint.style.display == "none") {
