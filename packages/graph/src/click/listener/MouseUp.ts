@@ -5,6 +5,7 @@ const { mxEvent } = mx;
 export class MouseUp extends BaseListener {
   beforeClick: any;
   onClick: any;
+  tol: any;
 
   handler = (_sender, me) => {
     const { ctx, graph, beforeClick, onClick } = this;
@@ -13,7 +14,7 @@ export class MouseUp extends BaseListener {
 
     // Checks for parent link
     var linkNode = source;
-    let { currentLink } = this;
+    let { currentLink, tol } = this;
 
     while (linkNode != null && linkNode.nodeName.toLowerCase() != "a") {
       linkNode = linkNode.parentNode;

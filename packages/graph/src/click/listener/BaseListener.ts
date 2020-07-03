@@ -7,6 +7,12 @@ export class BaseListener extends BaseEventer {
   ctx: any;
   updateCurrentState: any;
 
-  clear = new Clear().handler;
-  activate = new Activate().handler;
+  clear: any;
+  activate: any;
+
+  constructor(graph: any) {
+    super(graph);
+    this.clear = new Clear(graph).handler;
+    this.activate = new Activate(graph).handler;
+  }
 }

@@ -19,7 +19,11 @@ export class Click extends BaseEventer {
   currentLink: any;
   currentState: any;
 
-  mouseListener = new MouseListener(undefined).createHandler();
+  mouseListener: any;
+
+  init() {
+    this.mouseListener = new MouseListener(this.graph).createHandler();
+  }
 
   get model() {
     return this.graph.model;

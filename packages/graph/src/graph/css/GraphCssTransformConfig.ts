@@ -1,14 +1,5 @@
 import mx from "@mxgraph-app/mx";
-const {
-  mxGraph,
-  mxCellHighlight,
-  mxUtils,
-  mxConstants,
-  mxGraphView,
-  mxClient,
-  mxRectangle,
-  mxPoint,
-} = mx;
+const { mxUtils, mxConstants, mxGraphView, mxClient, mxPoint } = mx;
 import resources from "@mxgraph-app/resources";
 const { urlParams } = resources;
 
@@ -196,103 +187,6 @@ export class GraphCssTransformConfig {
   }
 
   /**
-   * Function: repaint
-   *
-   * Updates the highlight after a change of the model or view.
-   */
-  setStrokeWidthFn() {
-    mxCellHighlight.prototype.getStrokeWidth(state);
-    {
-      var s = this.strokeWidth;
-
-      if (this.graph.useCssTransforms) {
-        s /= this.graph.currentScale;
-      }
-
-      return s;
-    }
-  }
-
-  /**
-   * Function: getGraphBounds
-   *
-   * Overrides getGraphBounds to use bounding box from SVG.
-   */
-  setGraphBoundsFn() {
-    mxGraphView.prototype.getGraphBounds();
-    {
-      var b = this.graphBounds;
-
-      if (this.graph.useCssTransforms) {
-        var t = this.graph.currentTranslate;
-        var s = this.graph.currentScale;
-
-        b = new mxRectangle(
-          (b.x + t.x) * s,
-          (b.y + t.y) * s,
-          b.width * s,
-          b.height * s
-        );
-      }
-
-      return b;
-    }
-  }
-
-  /**
-   * Function: viewStateChanged
-   *
-   * Overrides to bypass full cell tree validation.
-   * TODO: Check if this improves performance
-   */
-  setStateViewChanged() {
-    const proto = mxGraphView.prototype;
-    mxGraphView.prototype["viewStateChanged"] = () => {
-      if (this.graph.useCssTransforms) {
-        proto.validate();
-        this.graph.sizeDidChange();
-      } else {
-        proto.revalidate();
-        this.graph.sizeDidChange();
-      }
-    };
-  }
-
-  /**
-   * Function: validate
-   *
-   * Overrides validate to normalize validation view state and pass
-   * current state to CSS transform.
-   */
-  setValidate() {
-    var graphViewValidate = mxGraphView.prototype.validate;
-    const proto = mxGraphView.prototype;
-
-    mxGraphView.prototype.validate = (cell) => {
-      const { scale, translate } = proto;
-      if (this.graph.useCssTransforms) {
-        this.graph.currentScale = scale;
-        this.graph.currentTranslate.x = translate.x;
-        this.graph.currentTranslate.y = translate.y;
-
-        proto.scale = 1;
-        proto.translate.x = 0;
-        proto.translate.y = 0;
-      }
-
-      graphViewValidate.apply(this, [cell]);
-
-      if (this.graph.useCssTransforms) {
-        this.graph.updateCssTransform();
-
-        proto.scale = this.graph.currentScale;
-        proto.translate.x = this.graph.currentTranslate.x;
-        proto.translate.y = this.graph.currentTranslate.y;
-      }
-    };
-  }
-
-  /**
    * Function: updateCssTransform
    *
    * Zooms out of the graph by <zoomFactor>.
@@ -378,30 +272,6 @@ export class GraphCssTransformConfig {
       if (useCssTranforms) {
         proto.scale = scale;
         proto.translate = translate;
-      }
-    };
-  }
-
-  setUpdatePageBreaks() {
-    var graphUpdatePageBreaks = mxGraph.prototype.updatePageBreaks;
-
-    mxGraph.prototype.updatePageBreaks = (visible, width, height) => {
-      var useCssTranforms = this.useCssTransforms,
-        scale = this.view.scale,
-        translate = this.view.translate;
-
-      if (useCssTranforms) {
-        this.view.scale = 1;
-        this.view.translate = new mxPoint(0, 0);
-        this.useCssTransforms = false;
-      }
-
-      graphUpdatePageBreaks.apply(this, [visible, width, height]);
-
-      if (useCssTranforms) {
-        this.view.scale = scale;
-        this.view.translate = translate;
-        this.useCssTransforms = true;
       }
     };
   }

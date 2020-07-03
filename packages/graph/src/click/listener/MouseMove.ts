@@ -1,8 +1,10 @@
 import { BaseListener } from "./BaseListener";
 
 export class MouseMove extends BaseListener {
+  tol: any;
+
   handler = (_sender, me) => {
-    const { graph, ctx } = this;
+    const { graph, ctx, tol } = this;
     if (graph.isMouseDown) {
       if (this.currentLink != null) {
         var dx = Math.abs(ctx.startX - me.getGraphX());

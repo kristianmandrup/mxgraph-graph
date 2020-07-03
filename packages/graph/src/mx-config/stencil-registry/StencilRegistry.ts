@@ -38,6 +38,8 @@ export class StencilRegistry {
      * Each package is only loaded once.
      */
     mxStencilRegistry["packages"] = [];
+
+    return mxStencilRegistry;
   }
 
   setGetStencil() {
@@ -114,6 +116,8 @@ export class StencilRegistry {
 
       return result;
     };
+
+    return mxStencilRegistry;
   }
 
   setGetBasenameForStencil() {

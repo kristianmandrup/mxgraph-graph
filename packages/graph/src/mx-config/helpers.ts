@@ -1,3 +1,6 @@
+import mx from "@mxgraph-app/mx";
+const { mxConstants } = mx;
+
 /**
  * Hints on handlers
  */
@@ -15,11 +18,11 @@ export function createHint() {
  */
 export function formatHintText(pixels, unit) {
   switch (unit) {
-    case mxConstants.POINTS:
+    case mxConstants["POINTS"]:
       return pixels;
-    case mxConstants.MILLIMETERS:
-      return (pixels / mxConstants.PIXELS_PER_MM).toFixed(1);
-    case mxConstants.INCHES:
-      return (pixels / mxConstants.PIXELS_PER_INCH).toFixed(2);
+    case mxConstants["MILLIMETERS"]:
+      return (pixels / mxConstants["PIXELS_PER_MM"]).toFixed(1);
+    case mxConstants["INCHES"]:
+      return (pixels / mxConstants["PIXELS_PER_INCH"]).toFixed(2);
   }
 }

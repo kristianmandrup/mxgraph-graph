@@ -1,101 +1,79 @@
 import { Click } from "../../click";
 import { Graph } from "../../";
+import { testInheritBaseEvent } from "./BaseEvent-inherited";
 
 describe("Click", () => {
   const opts = {};
   const model = {};
   const container = document.createElement("div");
 
-  let click, graph;
+  let instance, graph;
 
   beforeEach(() => {
     graph = new Graph(container, model, opts);
-    click = new Click(graph);
+    instance = new Click(graph);
   });
 
   describe("instance", () => {
     describe("inherited", () => {
-      describe("properties", () => {
-        describe("hasHighlight", () => {
-          it("is set", () => {
-            expect(click.hasHighlight).toBeDefined();
-          });
-        });
-      });
-
-      // BaseEventer
-      describe("methods", () => {
-        describe("getHighlight", () => {
-          it("is set", () => {
-            expect(click.getHighlight()).toBeDefined();
-          });
-        });
-
-        describe("createHighlight()", () => {
-          it("is set", () => {
-            expect(click.createHighlight()).toBeDefined();
-          });
-        });
-      });
+      testInheritBaseEvent(instance);
     });
 
     describe("properties", () => {
       describe("graph", () => {
         it("is set", () => {
-          expect(click.graph).toBe(graph);
+          expect(instance.graph).toBe(graph);
         });
       });
 
       describe("model", () => {
         it("is set", () => {
-          expect(click.model).toBe(graph.model);
+          expect(instance.model).toBe(graph.model);
         });
       });
 
       describe("view", () => {
         it("is set", () => {
-          expect(click.view).toBe(graph.view);
+          expect(instance.view).toBe(graph.view);
         });
       });
 
       describe("mouseListener", () => {
         it("is set", () => {
-          expect(click.mouseListener).toBeDefined();
+          expect(instance.mouseListener).toBeDefined();
         });
       });
     });
 
     describe("methods", () => {
-      describe("click(me)", () => {
+      describe("instance(me)", () => {
         const me = {};
 
         beforeEach(() => {
-          click.click(me);
+          instance.instance(me);
         });
 
         it("sets firstClickState", () => {
-          expect(click.firstClickState).toBeDefined();
+          expect(instance.firstClickState).toBeDefined();
         });
 
         it("sets firstClickSource", () => {
-          expect(click.firstClickSource).toBeDefined();
+          expect(instance.firstClickSource).toBeDefined();
         });
       });
 
-      describe("methods", () => {
-        describe("dblClick(evt, cell)", () => {
-          const evt = {};
-          const cell = {};
+      describe("dblClick(evt, cell)", () => {
+        const evt = {};
+        const cell = {};
 
-          it("does not throw", () => {
-            expect(() => click.dblClick(evt, cell)).not.toThrow();
-          });
+        it("does not throw", () => {
+          expect(() => instance.dblClick(evt, cell)).not.toThrow();
         });
+      });
 
-        describe("addClickHandler()", () => {
-          it("does not throw", () => {
-            expect(() => click.addClickHandler()).not.toThrow();
-          });
+      describe("addClickHandler()", () => {
+        it("does not throw", () => {
+          expect(() => instance.addClickHandler()).not.toThrow();
         });
       });
     });

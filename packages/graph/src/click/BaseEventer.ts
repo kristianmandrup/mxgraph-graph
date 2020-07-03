@@ -9,7 +9,10 @@ export class BaseEventer {
 
   constructor(graph: any) {
     this.graph = graph;
+    this.init();
   }
+
+  init() {}
 
   getHighlight() {
     const { hasHighlight } = this;
