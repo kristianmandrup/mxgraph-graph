@@ -2,6 +2,7 @@ import mx from "@mxgraph-app/mx";
 import { EventListeners } from "./EventListeners";
 import { DomainUrl } from "./DomainUrl";
 import { VertexHandlerConfig } from "./vertex-handler/VertexHandlerConf";
+import { Graph } from "../graph";
 const { mxConstants, mxPoint, mxUtils } = mx;
 
 export class GraphInitializer {
@@ -25,10 +26,11 @@ export class GraphInitializer {
   isCellSelected: any;
   selectionCellsHandler: any;
   currentTranslate: any;
+  model: any;
 
-  get model() {
-    return this.graph.model;
-  }
+  // get model() {
+  //   return this.graph.model;
+  // }
 
   getModel() {
     return this.graph.getModel();
@@ -55,13 +57,25 @@ export class GraphInitializer {
     this.domainUrlConf.configure();
   }
 
+  $graph: Graph;
+  renderHint: any;
+  stylesheet: any;
+
+  constructor($graph: Graph) {
+    this.$graph = $graph;
+  }
+
   /**
    * Graph inherits from mxGraph
    */
   // mxUtils.extend(Graph, mxGraph);
-  create(container, _model, _renderHint, _stylesheet, themes, standalone) {
+  create(graph, container, model, renderHint, stylesheet, themes, standalone) {
     // mxGraph.call(container, model, renderHint, stylesheet);
+    this.graph = graph;
     this.container = container;
+    this.model = model;
+    this.renderHint = renderHint;
+    this.stylesheet = stylesheet;
     this.themes = themes || this.defaultThemes;
     this.currentEdgeStyle = mxUtils.clone(this.defaultEdgeStyle);
     this.currentVertexStyle = mxUtils.clone(this.defaultVertexStyle);
