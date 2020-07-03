@@ -7,6 +7,10 @@ export class BaseEventer {
   currentLink: any;
   currentState: any;
 
+  constructor(graph: any) {
+    this.graph = graph;
+  }
+
   getHighlight() {
     const { hasHighlight } = this;
     return hasHighlight ? this.createHighlight() : null;

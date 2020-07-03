@@ -19,6 +19,8 @@ export class Click extends BaseEventer {
   currentLink: any;
   currentState: any;
 
+  mouseListener = new MouseListener(undefined).createHandler();
+
   get model() {
     return this.graph.model;
   }
@@ -87,7 +89,7 @@ export class Click extends BaseEventer {
   /**
    * Adds a handler for clicking on shapes with links. This replaces all links in labels.
    */
-  addClickHandler(_highlight, beforeClick, _onClick) {
+  addClickHandler(_highlight?, beforeClick?, _onClick?) {
     // Replaces links in labels for consistent right-clicks
     var checkLinks = () => {
       var links = this.container.getElementsByTagName("a");
@@ -121,6 +123,4 @@ export class Click extends BaseEventer {
       mouseListener.clear();
     });
   }
-
-  mouseListener = new MouseListener().createHandler();
 }
