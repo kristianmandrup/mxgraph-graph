@@ -5,6 +5,7 @@ export class UpdateLineJumps {
   actual: any;
   scale: any;
   validEdges: any;
+  state: any;
 
   setUpdateLineJumps() {
     /**
@@ -153,7 +154,7 @@ export class UpdateLineJumps {
 
   // Type 0 means normal waypoint, 1 means jump
   addPoint(type, x, y) {
-    const { actual } = this;
+    const { state, actual } = this;
     var rpt: any = new mxPoint(x, y);
     rpt.type = type;
 

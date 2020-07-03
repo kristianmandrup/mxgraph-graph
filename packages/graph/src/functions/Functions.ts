@@ -2,7 +2,7 @@ import { Graph } from "../graph/Graph";
 import mx from "@mxgraph-app/mx";
 const { mxPopupMenuHandler, mxEvent, mxUtils, mxConstants } = mx;
 
-export class Functionas {
+export class HelperFunctions {
   documentMode: any;
   isCustomLink: any; // fn
   selection: any;

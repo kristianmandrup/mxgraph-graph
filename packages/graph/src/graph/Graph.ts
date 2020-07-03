@@ -223,8 +223,7 @@ export class Graph {
     );
 
     return new mxImage(
-      "data:image/svg+xml;base64," +
-        Base64.encode(tmp, true),
+      "data:image/svg+xml;base64," + Base64.encode(tmp, true),
       w,
       h
     );
@@ -299,7 +298,7 @@ export class Graph {
         ? pako.deflate(encodeURIComponent(data), { to: "string" })
         : pako.deflateRaw(encodeURIComponent(data), { to: "string" });
 
-      return window.btoa ? btoa(tmp) : Base64.encode(tmp, true);
+      return btoa(tmp); // : Base64.encode(tmp, true);
     }
   }
 
@@ -310,7 +309,7 @@ export class Graph {
     if (data == null || data.length == 0 || typeof pako === "undefined") {
       return data;
     } else {
-      var tmp = window.atob ? atob(data) : Base64.decode(data, true);
+      var tmp = atob(data); // : Base64.decode(data, true);
 
       var inflated = decodeURIComponent(
         inflate
@@ -460,11 +459,16 @@ export class Graph {
    */
   standalone = false;
 
+  state: any;
+  shape: any;
+
   /**
    * Installs child layout styles.
    */
   init(container) {
     mxGraph.prototype.init.apply(this, [container]);
+
+    const { state, shape } = this;
 
     // Intercepts links with no target attribute and opens in new window
     this.cellRenderer.initializeLabel(state, shape);
