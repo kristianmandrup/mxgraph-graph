@@ -341,74 +341,371 @@ describe("MouseUp", () => {
       });
 
       // - LinkInfo class
-      // openLink(href, target, allowOpener?)
-      // getLinkTitle(href)
-      // isCustomLink(href)
-      // customLinkClicked(_link)
-      // isExternalProtocol(href)
-      // isBlankLink(href)
+      describe("openLink(href, target, allowOpener?)", () => {
+        const href = "www.x.com";
+        const target = document.createElement("a");
+
+        it("does not throw", () => {
+          expect(() => instance.openLink(href, target)).not.toThrow();
+        });
+      });
+
+      describe("getLinkTitle(href)", () => {
+        const href = "www.x.com";
+
+        it("is the title", () => {
+          expect(instance.getLinkTitle(href)).toEqual("x");
+        });
+      });
+
+      describe("isCustomLink(href)", () => {
+        const href = "www.x.com";
+
+        it("is custom", () => {
+          expect(instance.isCustomLink(href)).toEqual("x");
+        });
+      });
+
+      describe("isCustomLink(href)", () => {
+        const link = "www.x.com";
+
+        it("is clicked", () => {
+          expect(instance.customLinkClicked(link)).toBeDefined();
+        });
+      });
+
+      describe("isCustomLink(href)", () => {
+        const href = "www.x.com";
+
+        it("is external", () => {
+          expect(instance.isExternalProtocol(href)).toBeTruthy();
+        });
+      });
+
+      describe("isBlankLink(href)", () => {
+        const href = "www.x.com";
+
+        it("is blank", () => {
+          expect(instance.isBlankLink(href)).toBeTruthy();
+        });
+      });
 
       // - Url class
-      // isRelativeUrl(url)
-      // getAbsoluteUrl(url)
+      describe("isRelativeUrl(url)", () => {
+        it("is relative", () => {
+          const url = "/x";
+          expect(instance.isRelativeUrl(url)).toBeTruthy();
+        });
+
+        it("is not relative", () => {
+          const url = "http://www.x.com";
+          expect(instance.isRelativeUrl(url)).toBeFalsy();
+        });
+      });
+
+      describe("getAbsoluteUrl(url)", () => {
+        const url = "/x";
+
+        it("absolute", () => {
+          expect(instance.getAbsoluteUrl(url)).toBeDefined();
+        });
+      });
 
       // - GraphLayoutManager class
-      // initLayoutManager()
+      describe("getAbsoluteUrl(url)", () => {
+        const url = "/x";
+
+        it("does not throw", () => {
+          expect(() => instance.initLayoutManager()).not.toThrow();
+        });
+      });
 
       // - Page class
-      // getPageSize()
-      // getPageLayout()
+      //
+      describe("getPageSize()", () => {
+        it("pagesize", () => {
+          expect(instance.getPageSize()).toBeDefined();
+        });
+      });
+      describe("getPageLayout()", () => {
+        it("pageLayout", () => {
+          expect(instance.getPageLayout()).toBeDefined();
+        });
+      });
 
-      // sanitizeHtml(value, _editing?)
+      describe("sanitizeHtml(value, editing?)", () => {
+        it("sanitized", () => {
+          const value = "<h1>hello</h1><script>a</script>";
+          expect(instance.sanitizeHtml(value)).toBeDefined();
+        });
+      });
 
       // - Placeholders class
-      // updatePlaceholders()
-      // isReplacePlaceholders(cell)
-      // replacePlaceholders(cell, str)
+      describe("updatePlaceholders()", () => {
+        it("update", () => {
+          expect(() => instance.updatePlaceholders()).not.toThrow();
+        });
+      });
 
-      // - Zoom wheel class
-      // isZoomWheelEvent(evt)
-      // isScrollWheelEvent(evt)
+      describe("isReplacePlaceholders(cell)", () => {
+        it("update", () => {
+          const cell = {};
+          expect(() => instance.isReplacePlaceholders(cell)).not.toThrow();
+        });
+      });
 
-      // isTransparentClickEvent(evt)
-      // isIgnoreTerminalEvent(evt)
-      // isSplitTarget(target, cells, evt)
-      // getLabel(cell)
-      // setGridSize(value)
-      // fireEvent(_event)
-      // getClickableLinkForCell(cell)
-      // getGlobalVariable(name)
+      describe("updatePlaceholders()", () => {
+        it("update", () => {
+          const cell = {},
+            str = "xx";
+          expect(() => instance.replacePlaceholders(cell, str)).not.toThrow();
+        });
+      });
+
+      // - Wheel class
+      describe("isZoomWheelEvent(evt)", () => {
+        it("is zoom", () => {
+          const evt = {}; // fake event
+          expect(instance.isZoomWheelEvent(evt)).toBeFalsy();
+        });
+      });
+      describe("isScrollWheelEvent(evt)", () => {
+        it("is scroll", () => {
+          const evt = {}; // fake event
+          expect(instance.isScrollWheelEvent(evt)).toBeFalsy();
+        });
+      });
+
+      describe("isTransparentClickEvent(evt)", () => {
+        it("is scroll", () => {
+          const evt = {}; // fake event
+          expect(instance.isTransparentClickEvent(evt)).toBeFalsy();
+        });
+      });
+      describe("isIgnoreTerminalEvent(evt)", () => {
+        it("is terminal", () => {
+          const evt = {}; // fake event
+          expect(instance.isIgnoreTerminalEvent(evt)).toBeFalsy();
+        });
+      });
+
+      describe("isIgnoreTerminalEvent(evt)", () => {
+        it("is split target", () => {
+          const evt = {}; // fake event
+          const target = {},
+            cells = {};
+          expect(instance.isSplitTarget(target, cells, evt)).toBeFalsy();
+        });
+      });
+
+      describe("getLabel(cell)", () => {
+        it("label", () => {
+          const cell = {};
+          expect(instance.getLabel(cell)).toBeFalsy();
+        });
+      });
+
+      describe("setGridSize(value)", () => {
+        it("label", () => {
+          const value = {};
+          expect(instance.setGridSize(value)).toBeDefined();
+        });
+      });
+
+      describe("fireEvent", () => {
+        it("fires event", () => {
+          const event = {};
+          expect(() => instance.fireEvent(event)).not.toThrow();
+        });
+      });
+
+      describe("getClickableLinkForCell(cell)", () => {
+        it("clickable link", () => {
+          const cell = {};
+          expect(() => instance.getClickableLinkForCell(cell)).not.toThrow();
+        });
+      });
+
+      describe("getGlobalVariable(name)", () => {
+        it("clickable link", () => {
+          const name = "x";
+          expect(() => instance.getGlobalVariable(name)).not.toThrow();
+        });
+      });
 
       // - DateFormat class
       // formatDate(date, mask, utc?) - EXTRACT into class
+      describe("getGlobalVariable(name)", () => {
+        it("clickable link", () => {
+          const date = new Date();
+          const mask = "yy/MM/dd";
+          expect(instance.formatDate(date, mask)).toBeDefined();
+        });
+      });
 
       // - Layers class
-      // createLayersDialog()
-
-      // restoreSelection(cells)
-      // selectCellsForConnectVertex(cells, evt, hoverIcons)
+      describe("createLayersDialog()", () => {
+        it("layrs dialog", () => {
+          expect(instance.createLayersDialog()).toBeDefined();
+        });
+      });
+      describe("restoreSelection(cells)", () => {
+        it("layrs dialog", () => {
+          const cells = [{}];
+          expect(instance.restoreSelection(cells)).toBeDefined();
+        });
+      });
+      describe("restoreSelection(cells)", () => {
+        it("layrs dialog", () => {
+          const cells = [{}];
+          const evt = {};
+          const hoverIcons = ["add"];
+          expect(
+            instance.selectCellsForConnectVertex(cells, evt, hoverIcons)
+          ).not.toThrow();
+        });
+      });
 
       // - ConnectVertex class
-      // connectVertex(source, direction, length, evt, forceClone, ignoreCellAt) - EXTRACT into class
+      //  - EXTRACT into class
+      describe("restoreSelection(cells)", () => {
+        it("layrs dialog", () => {
+          const source = {};
+          const direction = "left";
+          const length = 1;
+          const forceClone = false;
+          const ignoreCellAt = [];
+          const evt = {};
+          expect(() =>
+            instance.connectVertex(
+              source,
+              direction,
+              length,
+              evt,
+              forceClone,
+              ignoreCellAt
+            )
+          ).not.toThrow();
+        });
+      });
 
-      // getIndexableText()
-      // convertValueToString(cell)
+      describe("getIndexableText()", () => {
+        it("text", () => {
+          expect(instance.getIndexableText()).toBeDefined();
+        });
+      });
+      describe("getIndexableText()", () => {
+        it("string", () => {
+          const cell = {};
+          expect(instance.convertValueToString(cell)).toBeDefined();
+        });
+      });
 
       // - Link class
-      // getLinksForState(state)
-      // getLinkForCell(cell)
+      describe("getLinksForState(state)", () => {
+        it("links", () => {
+          const state = {};
+          expect(instance.getLinksForState(state)).toBeDefined();
+        });
+      });
+      describe("getLinkForCell(cell)", () => {
+        it("link", () => {
+          const cell = {};
+          expect(instance.getLinkForCell(cell)).toBeDefined();
+        });
+      });
+      describe("getCellStyle(cell)", () => {
+        it("style", () => {
+          const cell = {};
+          expect(instance.getCellStyle(cell)).toBeDefined();
+        });
+      });
+      describe("updateAlternateBounds(cell, geo, willCollapse)", () => {
+        it("style", () => {
+          const cell = {};
+          const geo = {};
+          const willCollapse = false;
+          expect(() =>
+            instance.updateAlternateBounds(cell, geo, willCollapse)
+          ).not.toThrow();
+        });
+      });
 
-      // getCellStyle(cell)
-      // updateAlternateBounds(cell, geo, willCollapse)
-      // isMoveCellsEvent(evt, state)
-      // foldCells(collapse, recurse, cells, checkFoldable, evt)
-      // moveSiblings(state, parent, dx, dy)
-      // resizeParentStacks(parent, layout, dx, dy)
-      // isContainer(cell)
-      // isExtendParent(cell)
-      // isCellConnectable(cell)
-      // isLabelMovable(cell)
-      // selectAll(parent)
+      describe("isMoveCellsEvent(evt, state)", () => {
+        it("is terminal", () => {
+          const evt = {}; // fake event
+          const state = {};
+          expect(instance.isMoveCellsEvent(evt, state)).toBeFalsy();
+        });
+      });
+
+      describe("foldCells(collapse, recurse, cells, checkFoldable, evt)", () => {
+        it("does not throw", () => {
+          const evt = {}; // fake event
+          const collapse = true,
+            recurse = false,
+            cells = [{}],
+            checkFoldable = false;
+          expect(() =>
+            instance.foldCells(collapse, recurse, cells, checkFoldable, evt)
+          ).not.toThrow();
+        });
+      });
+
+      describe("moveSiblings(state, parent, dx, dy)", () => {
+        it("does not throw", () => {
+          const dx = 0,
+            dy = 0;
+          const state = {};
+          expect(() =>
+            instance.moveSiblings(state, parent, dx, dy)
+          ).not.toThrow();
+        });
+      });
+
+      describe("resizeParentStacks(parent, layout, dx, dy)", () => {
+        it("does not throw", () => {
+          const dx = 0,
+            dy = 0;
+          const parent = {};
+          const layout = {};
+          expect(() =>
+            instance.resizeParentStacks(parent, layout, dx, dy)
+          ).not.toThrow();
+        });
+      });
+
+      describe("isContainer(cell)", () => {
+        it("is not container", () => {
+          const cell = {}; // fake event
+          expect(instance.isContainer(cell)).toBeFalsy();
+        });
+      });
+      describe("isExtendParent(cell)", () => {
+        it("is not extend parent", () => {
+          const cell = {}; // fake event
+          expect(instance.isExtendParent(cell)).toBeFalsy();
+        });
+      });
+      describe("isCellConnectable(cell)", () => {
+        it("is not connectable", () => {
+          const cell = {}; // fake event
+          expect(instance.isCellConnectable(cell)).toBeFalsy();
+        });
+      });
+      describe("isLabelMovable(cell)", () => {
+        it("is not movable", () => {
+          const cell = {}; // fake event
+          expect(instance.isLabelMovable(cell)).toBeFalsy();
+        });
+      });
+      describe("selectAll(parent)", () => {
+        it("selects all", () => {
+          const cell = {}; // fake event
+          expect(() => instance.selectAll(parent)).not.toThrow();
+        });
+      });
+
       // selectCells(vertices, edges, parent)
       // getSwimlaneAt(x, y, parent)
       // isCellFoldable(cell)
