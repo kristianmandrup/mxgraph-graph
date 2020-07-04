@@ -1,6 +1,6 @@
 import { Graph } from "../../graph";
 
-describe("MouseUp", () => {
+describe("Graph", () => {
   const opts = {};
   const model = {};
   const container = document.createElement("div");

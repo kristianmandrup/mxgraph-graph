@@ -1,6 +1,7 @@
 import mx from "@mxgraph-app/mx";
 const { mxUtils, mxConstants, mxGraphView, mxClient, mxPoint } = mx;
 import resources from "@mxgraph-app/resources";
+import { Graph } from "..";
 const { urlParams } = resources;
 
 /**
@@ -26,6 +27,10 @@ export class GraphCssTransformConfig {
   getCurrentCellStyle: any; // (cell) => any
   strokeWidth: any;
   graphBounds: any;
+
+  constructor($graph: Graph) {
+    this.graph = $graph.graph;
+  }
 
   getModel() {
     return this.graph.getModel();
@@ -152,10 +157,10 @@ export class GraphCssTransformConfig {
 
     return null;
   }
+
   /**
    * Returns if the child cells of the given vertex cell state should be resized.
    */
-
   isRecursiveVertexResize(state) {
     return (
       !this.isSwimlane(state.cell) &&
