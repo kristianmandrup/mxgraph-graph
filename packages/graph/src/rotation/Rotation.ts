@@ -9,6 +9,12 @@ export class Rotation {
   getCellGeometry: any;
   setCellStyles: any;
 
+  graph: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+  }
+
   /**
    * Turns the given cells and returns the changed cells.
    */

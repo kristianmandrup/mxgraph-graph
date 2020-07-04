@@ -14,20 +14,23 @@ export class Importer {
   isGridEnabled: any;
   snap: any;
   getBoundingBoxFromGeometry: any;
+  cells: any;
+  dx: number = 0;
+  dy: number = 0;
 
   tempModel: any;
   cloneMap = {};
   cellMapping = {};
 
+  graph: any;
   node: any;
-  dx: number;
-  dy: number;
   crop: boolean;
 
-  constructor(node, dx, dy, crop) {
+  constructor(graph, node, dx, dy, crop) {
     dx = dx != null ? dx : 0;
     dy = dy != null ? dy : 0;
 
+    this.graph = graph;
     this.node = node;
     this.dx = dx;
     this.dy = dy;
@@ -89,7 +92,7 @@ export class Importer {
   }
 
   mapClonedEntries() {
-    const { cloneMap, lookup, crop, cellMapping } = this;
+    const { cloneMap, lookup, crop, cellMapping, cells } = this;
 
     if (!cells) return;
     // Adds mapping for all cloned entries from imported to local cell ID
@@ -112,7 +115,8 @@ export class Importer {
   }
 
   mergeLayers() {
-    const { tempModel, layers, cellMapping } = this;
+    const { tempModel, layers, cellMapping, dx, dy } = this;
+    let { cells } = this;
     // Merges into unlocked current layer if one layer is pasted
     if (layers.length == 1 && !this.isCellLocked(this.getDefaultParent())) {
       cells = this.moveCells(

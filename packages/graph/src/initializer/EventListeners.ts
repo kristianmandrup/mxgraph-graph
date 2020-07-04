@@ -1,4 +1,4 @@
-import { MouseMove } from "./MouseMove";
+import { GraphMouseMove } from "./GraphMouseMove";
 import mx from "@mxgraph-app/mx";
 const { mxPoint, mxEvent, mxUtils } = mx;
 
@@ -77,7 +77,7 @@ export class EventListeners {
     });
   }
 
-  mouseMove = new MouseMove().handler;
+  mouseMove = new GraphMouseMove().handler;
 
   mouseDown = (_sender, _me) => {};
 

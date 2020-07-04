@@ -2,6 +2,7 @@ import mx from "@mxgraph-app/mx";
 const { mxPoint, mxRectangle, mxUtils } = mx;
 
 export class InsertPoint {
+  graph: any;
   container: any;
   view: any;
   getGridSize: any;
@@ -11,6 +12,10 @@ export class InsertPoint {
   snap: any;
   getGraphBounds: any;
   gridSize: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+  }
 
   /**
    * Returns a point that specifies the location for inserting cells.

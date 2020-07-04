@@ -1,7 +1,7 @@
 import mx from "@mxgraph-app/mx";
 const { mxEdgeHandler, mxRectangle, mxEdgeStyle, mxEvent, mxUtils } = mx;
 
-export class MouseMove {
+export class GraphMouseMove {
   selectionCellsHandler: any;
   setSelectionCell: any;
   isEnabled: any;

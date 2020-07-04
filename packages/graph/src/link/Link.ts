@@ -2,7 +2,13 @@ import mx from "@mxgraph-app/mx";
 const { mxClient, mxUtils } = mx;
 
 export class Link {
+  graph: any;
   cellEditor: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+  }
+
   /**
    * Inserts the given image at the cursor in a content editable text box using
    * the insertimage command on the document instance.

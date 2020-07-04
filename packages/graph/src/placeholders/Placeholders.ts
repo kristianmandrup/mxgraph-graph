@@ -7,6 +7,14 @@ export class Placeholders {
   removeStateForCell: any;
   isReplacePlaceholders: any;
 
+  graph: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+    this.model = graph.model;
+    this.view = graph.view;
+  }
+
   /**
    * Returns true if the given stencil contains any placeholder text.
    */
