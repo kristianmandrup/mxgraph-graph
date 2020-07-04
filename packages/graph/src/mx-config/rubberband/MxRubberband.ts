@@ -232,4 +232,6 @@ export const MxRubberband = Class.extend({
       }
     }
   },
+  // Enables fading of rubberband
+  fadeOut: true,
 });

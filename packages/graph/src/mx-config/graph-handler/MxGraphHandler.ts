@@ -136,4 +136,103 @@ export const MxGraphHandler = Class.extend({
 
     return mxGraphHandlerGetBoundingBox.apply(this, [cells]);
   },
+
+  // Disables removing relative children from parents
+  shouldRemoveCellsFromParent: function (parent, cells, evt) {
+    const mxGraphHandlerShouldRemoveCellsFromParent =
+      mxGraphHandler.prototype.shouldRemoveCellsFromParent;
+    for (var i = 0; i < cells.length; i++) {
+      if (this.graph.getModel().isVertex(cells[i])) {
+        var geo = this.graph.getCellGeometry(cells[i]);
+        if (geo != null && geo.relative) {
+          return false;
+        }
+      }
+    }
+    return mxGraphHandlerShouldRemoveCellsFromParent.apply(this, [
+      parent,
+      cells,
+      evt,
+    ]);
+  },
+
+  // Delayed selection of parent group
+  selectDelayed: function (me) {
+    if (!this.graph.popupMenuHandler.isPopupTrigger(me)) {
+      var cell = me.getCell();
+      if (cell == null) {
+        cell = this.cell;
+      }
+
+      // Selects folded cell for hit on folding icon
+      var state = this.graph.view.getState(cell);
+
+      if (state != null && me.isSource(state.control)) {
+        this.graph.selectCellForEvent(cell, me.getEvent());
+      } else {
+        var model = this.graph.getModel();
+        var parent = model.getParent(cell);
+
+        while (!this.graph.isCellSelected(parent) && model.isVertex(parent)) {
+          cell = parent;
+          parent = model.getParent(cell);
+        }
+
+        this.graph.selectCellForEvent(cell, me.getEvent());
+      }
+    }
+  },
+
+  // Selection is delayed to mouseup if ancestor is selected
+  isDelayedSelection: function (cell, me) {
+    const graphHandlerIsDelayedSelection =
+      mxGraphHandler.prototype.isDelayedSelection;
+
+    var result = graphHandlerIsDelayedSelection.apply(this, [cell, me]);
+    if (!result) {
+      var model = this.graph.getModel();
+      var parent = model.getParent(cell);
+
+      while (parent != null) {
+        // Inconsistency for unselected parent swimlane is intended for easier moving
+        // of stack layouts where the container title section is too far away
+        if (this.graph.isCellSelected(parent) && model.isVertex(parent)) {
+          result = true;
+          break;
+        }
+        parent = model.getParent(parent);
+      }
+    }
+    return result;
+  },
+
+  // Selects ancestors before descendants
+  getInitialCellForEvent: function (me) {
+    const graphHandlerGetInitialCellForEvent =
+      mxGraphHandler.prototype.getInitialCellForEvent;
+
+    var model = this.graph.getModel();
+    var psel = model.getParent(this.graph.getSelectionCell());
+    var cell = graphHandlerGetInitialCellForEvent.apply(this, [me]);
+    var parent = model.getParent(cell);
+
+    if (psel == null || (psel != cell && psel != parent)) {
+      while (
+        !this.graph.isCellSelected(cell) &&
+        !this.graph.isCellSelected(parent) &&
+        model.isVertex(parent) &&
+        !this.graph.isContainer(parent)
+      ) {
+        cell = parent;
+        parent = this.graph.getModel().getParent(cell);
+      }
+    }
+    return cell;
+  },
+
+  // Enables guides
+  guidesEnabled: true,
+
+  // Removes parents where all child cells are moved out
+  removeEmptyParents: true,
 });

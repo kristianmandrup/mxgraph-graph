@@ -355,4 +355,7 @@ export const MxEdgeHandler = Class.extend({
         mxEdgeHandlerIsOutlineConnectEvent.apply(this, [me]))
     );
   },
+
+  // Enables snapping to off-grid terminals for edge waypoints
+  snapToTerminals: true,
 });

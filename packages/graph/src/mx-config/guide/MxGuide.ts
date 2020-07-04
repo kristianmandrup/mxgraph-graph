@@ -1,5 +1,5 @@
 import mx from "@mxgraph-app/mx";
-const { mxGuide, mxPolyline, mxConstants } = mx;
+const { mxEvent, mxGuide, mxPolyline, mxConstants } = mx;
 
 // See: https://johnresig.com/blog/simple-javascript-inheritance/
 import { Class } from "../Class";
@@ -26,5 +26,10 @@ export const MxGuide = Class.extend({
     );
 
     return guide;
+  },
+
+  // Alt-move disables guides
+  isEnabledForEvent: function (evt) {
+    return !mxEvent.isAltDown(evt);
   },
 });

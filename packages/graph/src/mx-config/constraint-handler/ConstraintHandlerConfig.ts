@@ -6,11 +6,9 @@ export class ConstraintHandlerConfig {
   createSvgImage: any;
   arrowFill = HoverIcons.prototype.arrowFill;
 
-  configure() {
-    this.setUpdate();
-
-    return mxConstraintHandler;
-  }
+  // isEnabled: function () {
+  //   return this.graph.connectionHandler.isEnabled();
+  // },
 
   setUpdate() {
     var mxConstraintHandlerUpdate = mxConstraintHandler.prototype.update;
@@ -36,3 +34,12 @@ export class ConstraintHandlerConfig {
     }
   }
 }
+
+//   // Overrides highlight shape for connection points
+//   mxConstraintHandler.prototype.createHighlightShape = () => {
+//     var hl = new mxEllipse(null, this.highlightColor, this.highlightColor, 0);
+//     hl.opacity = mxConstants.HIGHLIGHT_OPACITY;
+
+//     return hl;
+//   }; // Overrides edge preview to use current edge shape and default style
+// }
