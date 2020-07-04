@@ -24,6 +24,12 @@ export class Svg {
   updateSvgLinks: any;
   addForeignObjectWarning: any;
 
+  graph: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+  }
+
   /**
    * Hook for creating the canvas used in getSvg.
    */
@@ -36,10 +42,7 @@ export class Svg {
   }
 
   /**
-   * Translates this point by the given vector.
    *
-   * @param {number} dx X-coordinate of the translation.
-   * @param {number} dy Y-coordinate of the translation.
    */
   createSvgImageExport() {
     var exp = new mxImageExport();
@@ -52,12 +55,8 @@ export class Svg {
     return exp;
   }
   /**
-   * Translates this point by the given vector.
-   *
-   * @param {number} dx X-coordinate of the translation.
-   * @param {number} dy Y-coordinate of the translation.
    */
-  getSvg(
+  getSvg({
     background,
     scale,
     border,
@@ -67,8 +66,8 @@ export class Svg {
     showText,
     imgExport,
     linkTarget,
-    hasShadow
-  ) {
+    hasShadow,
+  }: any = {}) {
     //Disable Css Transforms if it is used
     var origUseCssTrans = this.useCssTransforms;
 

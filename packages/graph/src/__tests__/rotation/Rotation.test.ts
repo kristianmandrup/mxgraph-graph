@@ -1,7 +1,7 @@
 import { Rotation } from "../..";
 import { Graph } from "../../graph";
 
-describe("InsertPoint", () => {
+describe("Rotation", () => {
   const opts = {};
   const model = {};
   const container = document.createElement("div");

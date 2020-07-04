@@ -1,6 +1,12 @@
 export class Styling {
   currentEdgeStyle: any;
 
+  graph: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+  }
+
   /**
    *
    */

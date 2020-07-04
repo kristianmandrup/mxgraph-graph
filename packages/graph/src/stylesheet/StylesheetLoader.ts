@@ -8,6 +8,12 @@ export class StylesheetLoader {
   themes: any;
   getStylesheet: any;
 
+  graph: any;
+
+  constructor(graph: any) {
+    this.graph = graph;
+  }
+
   /**
    * Loads the stylesheet for this graph.
    */
