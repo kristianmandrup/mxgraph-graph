@@ -405,16 +405,13 @@ describe("MouseUp", () => {
 
       describe("getAbsoluteUrl(url)", () => {
         const url = "/x";
-
         it("absolute", () => {
           expect(instance.getAbsoluteUrl(url)).toBeDefined();
         });
       });
 
       // - GraphLayoutManager class
-      describe("getAbsoluteUrl(url)", () => {
-        const url = "/x";
-
+      describe("initLayoutManager()", () => {
         it("does not throw", () => {
           expect(() => instance.initLayoutManager()).not.toThrow();
         });
@@ -449,14 +446,14 @@ describe("MouseUp", () => {
 
       describe("isReplacePlaceholders(cell)", () => {
         it("update", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           expect(() => instance.isReplacePlaceholders(cell)).not.toThrow();
         });
       });
 
       describe("updatePlaceholders()", () => {
         it("update", () => {
-          const cell = {},
+          const cell = {}, // fake cell
             str = "xx";
           expect(() => instance.replacePlaceholders(cell, str)).not.toThrow();
         });
@@ -492,22 +489,22 @@ describe("MouseUp", () => {
       describe("isIgnoreTerminalEvent(evt)", () => {
         it("is split target", () => {
           const evt = {}; // fake event
-          const target = {},
-            cells = {};
+          const target = {}, // fake target
+            cells = {}; // fake cells
           expect(instance.isSplitTarget(target, cells, evt)).toBeFalsy();
         });
       });
 
       describe("getLabel(cell)", () => {
         it("label", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           expect(instance.getLabel(cell)).toBeFalsy();
         });
       });
 
       describe("setGridSize(value)", () => {
         it("label", () => {
-          const value = {};
+          const value = {}; // fake event
           expect(instance.setGridSize(value)).toBeDefined();
         });
       });
@@ -521,7 +518,7 @@ describe("MouseUp", () => {
 
       describe("getClickableLinkForCell(cell)", () => {
         it("clickable link", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           expect(() => instance.getClickableLinkForCell(cell)).not.toThrow();
         });
       });
@@ -551,14 +548,14 @@ describe("MouseUp", () => {
       });
       describe("restoreSelection(cells)", () => {
         it("layrs dialog", () => {
-          const cells = [{}];
+          const cells = [{}]; // fake cells
           expect(instance.restoreSelection(cells)).toBeDefined();
         });
       });
       describe("restoreSelection(cells)", () => {
         it("layrs dialog", () => {
-          const cells = [{}];
-          const evt = {};
+          const cells = [{}]; // fake cells
+          const evt = {}; // fake event
           const hoverIcons = ["add"];
           expect(
             instance.selectCellsForConnectVertex(cells, evt, hoverIcons)
@@ -596,7 +593,7 @@ describe("MouseUp", () => {
       });
       describe("getIndexableText()", () => {
         it("string", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           expect(instance.convertValueToString(cell)).toBeDefined();
         });
       });
@@ -610,19 +607,19 @@ describe("MouseUp", () => {
       });
       describe("getLinkForCell(cell)", () => {
         it("link", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           expect(instance.getLinkForCell(cell)).toBeDefined();
         });
       });
       describe("getCellStyle(cell)", () => {
         it("style", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           expect(instance.getCellStyle(cell)).toBeDefined();
         });
       });
       describe("updateAlternateBounds(cell, geo, willCollapse)", () => {
         it("style", () => {
-          const cell = {};
+          const cell = {}; // fake cell
           const geo = {};
           const willCollapse = false;
           expect(() =>
@@ -677,13 +674,13 @@ describe("MouseUp", () => {
 
       describe("isContainer(cell)", () => {
         it("is not container", () => {
-          const cell = {}; // fake event
+          const cell = {}; // fake cell
           expect(instance.isContainer(cell)).toBeFalsy();
         });
       });
       describe("isExtendParent(cell)", () => {
         it("is not extend parent", () => {
-          const cell = {}; // fake event
+          const cell = {}; // fake cell
           expect(instance.isExtendParent(cell)).toBeFalsy();
         });
       });
@@ -695,77 +692,358 @@ describe("MouseUp", () => {
       });
       describe("isLabelMovable(cell)", () => {
         it("is not movable", () => {
-          const cell = {}; // fake event
+          const cell = {}; // fake cell
           expect(instance.isLabelMovable(cell)).toBeFalsy();
         });
       });
       describe("selectAll(parent)", () => {
         it("selects all", () => {
-          const cell = {}; // fake event
+          const parent = {}; // fake parent
           expect(() => instance.selectAll(parent)).not.toThrow();
         });
       });
+      describe("selectCells(vertices, edges, parent)", () => {
+        it("selects all", () => {
+          const parent = {}; // fake parent
+          const vertices = [{}],
+            edges = [{}];
+          expect(() =>
+            instance.selectCells(vertices, edges, parent)
+          ).not.toThrow();
+        });
+      });
+      describe("getSwimlaneAt(x, y, parent)", () => {
+        it("selects all", () => {
+          const parent = {}; // fake parent
+          const x = 0,
+            y = 0;
+          expect(() => instance.getSwimlaneAt(x, y, parent)).not.toThrow();
+        });
+      });
+      describe("isCellFoldable(cell)", () => {
+        it("is not foldable", () => {
+          const cell = {}; // fake cell
+          expect(instance.isCellFoldable(cell)).toBeFalsy();
+        });
+      });
 
-      // selectCells(vertices, edges, parent)
-      // getSwimlaneAt(x, y, parent)
-      // isCellFoldable(cell)
-      // reset()
+      describe("reset()", () => {
+        it("selects all", () => {
+          expect(() => instance.reset()).not.toThrow();
+        });
+      });
 
       // - Extract into Zoom class
-      // zoom(factor, center?)
-      // zoomIn()
-      // zoomOut()
-      // getTooltipForCell(cell)
+      describe("zoom(factor, center)", () => {
+        it("selects all", () => {
+          const factor = 1,
+            center = 1;
+          expect(() => instance.zoom(factor, center)).not.toThrow();
+        });
+      });
+      describe("zoom(factor, center)", () => {
+        it("selects all", () => {
+          const factor = 1,
+            center = 1;
+          expect(() => instance.zoom(factor, center)).not.toThrow();
+        });
+      });
+      describe("zoomIn()", () => {
+        it("does not throw", () => {
+          expect(() => instance.zoomIn()).not.toThrow();
+        });
+      });
+      describe("zoomOut()", () => {
+        it("does not throw", () => {
+          expect(() => instance.zoomOut()).not.toThrow();
+        });
+      });
+      describe("getTooltipForCell(cell)", () => {
+        it("tooltip", () => {
+          const cell = {};
+          expect(instance.getTooltipForCell(cell)).toBeDefined();
+        });
+      });
 
       // - StrBytesConvert class
-      // stringToBytes(str)
-      // bytesToString(arr)
+      describe("stringToBytes(str)", () => {
+        it("to bytes", () => {
+          const str = "x";
+          expect(instance.stringToBytes(str)).toBeDefined();
+        });
+      });
+      describe("bytesToString(arr)", () => {
+        it("to str", () => {
+          const arr = ["x"];
+          expect(instance.bytesToString(arr)).toBeDefined();
+        });
+      });
 
       // - Compress class
-      // compressNode(node)
-      // compress(data, deflate)
-      // decompress(data, inflate)
+      describe("compressNode(node)", () => {
+        it("compressed", () => {
+          const node = {};
+          expect(instance.compressNode(node)).toBeDefined();
+        });
+      });
+      describe("compress(data, deflate)", () => {
+        it("compressed", () => {
+          const data = "x";
+          const deflate = false;
+          expect(instance.compress(data, deflate)).toBeDefined();
+        });
+      });
+      describe("compress(data, deflate)", () => {
+        it("decompressed", () => {
+          const data = "x";
+          const inflate = false;
+          expect(instance.decompress(data, inflate)).toBeDefined();
+        });
+      });
+      describe("zapGremlins(text)", () => {
+        it("decompressed", () => {
+          const text = "x";
+          expect(instance.zapGremlins(text)).toBeDefined();
+        });
+      });
 
-      // zapGremlins(text)
-      // createParent(parent, child, childCount)
-      // createTable(rowCount, colCount, w, h)
+      describe("createParent(parent, child, childCount)", () => {
+        it("decompressed", () => {
+          const parent = {}; // fake parent
+          const child = {},
+            childCount = 1;
+          expect(
+            instance.createParent(parent, child, childCount)
+          ).toBeDefined();
+        });
+      });
 
+      describe("createTable(rowCount, colCount, w, h)", () => {
+        it("table", () => {
+          const rowCount = 1,
+            colCount = 1,
+            w = 100,
+            h = 100;
+          expect(instance.createTable(rowCount, colCount, w, h)).toBeDefined();
+        });
+      });
       // - GraphSwimlane class
-      // createCrossFunctionalSwimlane(rowCount, colCount, w, h)
+      describe("createCrossFunctionalSwimlane(rowCount, colCount, w, h)", () => {
+        it("swimlane", () => {
+          const rowCount = 1,
+            colCount = 1,
+            w = 100,
+            h = 100;
+          expect(
+            instance.createCrossFunctionalSwimlane(rowCount, colCount, w, h)
+          ).toBeDefined();
+        });
+      });
 
       // - GraphTable class
-      // isTableCell(cell)
-      // isTableRow(cell)
-      // isTable(cell)
-      // tableResized(table)
-      // tableRowResized(row, bounds, prev)
-      // tableCellResized(cell, bounds, prev)
+      describe("isTableCell(cell)", () => {
+        it("is not table cell", () => {
+          const cell = {}; // fake cell
+          expect(instance.isTableCell(cell)).toBeFalsy();
+        });
+      });
+      describe("isTableRow(cell)", () => {
+        it("is not table row", () => {
+          const cell = {}; // fake cell
+          expect(instance.isTableRow(cell)).toBeFalsy();
+        });
+      });
+      describe("isTable(cell)", () => {
+        it("is not table", () => {
+          const cell = {}; // fake cell
+          expect(instance.isTable(cell)).toBeFalsy();
+        });
+      });
 
-      // getActualStartSize(swimlane, ignoreState?)
-      // setRowHeight(row, height)
-      // getPagePadding()
+      describe("tableResized(table)", () => {
+        it("is resized", () => {
+          const table = {}; // fake table
+          expect(instance.tableResized(table)).toBeDefined();
+        });
+      });
+      describe("tableRowResized(row, bounds, prev)", () => {
+        it("is resized", () => {
+          const row = 0,
+            bounds = {},
+            prev = {};
+          expect(instance.tableRowResized(row, bounds, prev)).toBeDefined();
+        });
+      });
+      describe("tableCellResized(cell, bounds, prev)", () => {
+        it("is resized", () => {
+          const cell = 0; // fake cell
+          const bounds = {},
+            prev = {};
+          expect(instance.tableCellResized(cell, bounds, prev)).toBeDefined();
+        });
+      });
+
+      describe("getActualStartSize(swimlane, ignoreState)", () => {
+        it("size", () => {
+          const swimlane = {},
+            ignoreState = false;
+          expect(
+            instance.getActualStartSize(swimlane, ignoreState)
+          ).toBeDefined();
+        });
+      });
+      describe("setRowHeight(row, height)", () => {
+        it("set", () => {
+          const row = 0,
+            height = 0;
+          expect(() => instance.setRowHeight(row, height)).not.toThrow();
+        });
+      });
+      describe("getPagePadding()", () => {
+        it("padding", () => {
+          expect(instance.getPagePadding()).toBeDefined();
+        });
+      });
 
       // - GraphCells class
-      // createCellLookup(cells, lookup)
-      // createCellMapping(mapping, lookup, cellMapping)
-      // encodeCells(cells)
-      // moveCells(cells, dx, dy, clone, target, evt, mapping)
+      describe("createCellLookup(cells, lookup)", () => {
+        it("creates", () => {
+          const cells = [{}]; // fake cells
+          const lookup = true;
+          expect(() => instance.createCellLookup(cells, lookup)).not.toThrow();
+        });
+      });
+      describe("createCellMapping(mapping, lookup, cellMapping)", () => {
+        it("mapping", () => {
+          const cellMapping = {};
+          const lookup = true,
+            mapping = true;
+          expect(
+            instance.createCellMapping(mapping, lookup, cellMapping)
+          ).toBeDefined();
+        });
+      });
+      describe("encodeCells(cells)", () => {
+        it("encoded - no throw", () => {
+          const cells = [{}]; // fake cells
+          expect(() => instance.encodeCells(cells)).not.toThrow();
+        });
+      });
+      describe("moveCells(cells, dx, dy, clone, target, evt, mapping)", () => {
+        it("move - no throw", () => {
+          const cells = [{}]; // fake cells
+          const dx = 0,
+            dy = 0;
+          const clone = true,
+            target = {};
+          const evt = {},
+            mapping = {};
+          expect(() =>
+            instance.moveCells(cells, dx, dy, clone, target, evt, mapping)
+          ).not.toThrow();
+        });
+      });
 
       // - CustomLinks class
-      // updateCustomLinks(mapping, cells)
-      // updateCustomLinksForCell(_mapping, _cell)
+      describe("updateCustomLinks(mapping, cells)", () => {
+        it("updated - no throw", () => {
+          const cells = [{}]; // fake cells
+          const mapping = {};
+          expect(() =>
+            instance.updateCustomLinks(mapping, cells)
+          ).not.toThrow();
+        });
+      });
+      describe("updateCustomLinksForCell(mapping, cells)", () => {
+        it("updated - no throw", () => {
+          const cell = {}; // fake cell
+          const mapping = {};
+          expect(() =>
+            instance.updateCustomLinksForCell(mapping, cell)
+          ).not.toThrow();
+        });
+      });
+      describe("getAllConnectionConstraints(terminal, source)", () => {
+        it("constraints", () => {
+          const terminal = {},
+            source = {};
+          expect(
+            instance.getAllConnectionConstraints(terminal, source)
+          ).toBeDefined();
+        });
+      });
+      describe("flipEdge(edge)", () => {
+        it("constraints", () => {
+          const edge = {};
+          expect(() => instance.flipEdge(edge)).not.toThrow();
+        });
+      });
 
-      // getAllConnectionConstraints(terminal, _source)
-      // flipEdge(edge)
-      // isValidRoot(cell)
-      // isValidDropTarget(cell)
-      // createGroupCell()
-      // isExtendParentsOnAdd(cell)
-      // getPreferredSizeForCell(cell)
-      // getDropTarget(cells, evt, cell, clone)
-      // addText(x, y, state)
-      // insertImage(newValue, w, h)
-      // isCloneEvent(evt)
+      describe("isValidRoot(cell)", () => {
+        it("is not valid", () => {
+          const cell = {};
+          expect(instance.isValidRoot(cell)).toBeFalsy();
+        });
+      });
+      describe("isValidDropTarget(cell)", () => {
+        it("is not valid", () => {
+          const cell = {};
+          expect(instance.isValidDropTarget(cell)).toBeFalsy();
+        });
+      });
+      describe("isExtendParentsOnAdd(cell)", () => {
+        it("is not", () => {
+          const cell = {};
+          expect(instance.isExtendParentsOnAdd(cell)).toBeFalsy();
+        });
+      });
+      describe("createGroupCell()", () => {
+        it("creates group", () => {
+          expect(instance.createGroupCell()).toBeDefined();
+        });
+      });
+
+      describe("getPreferredSizeForCell(cell)", () => {
+        it("size", () => {
+          const cell = {};
+          expect(instance.getPreferredSizeForCell(cell)).toBeDefined();
+        });
+      });
+
+      describe("getDropTarget(cells, evt, cell, clone)", () => {
+        it("drop target", () => {
+          const cells = [{}];
+          const evt = {},
+            cell = {},
+            clone = false;
+          expect(instance.getDropTarget(cells, evt, cell, clone)).toBeDefined();
+        });
+      });
+
+      describe("addText(x, y, state)", () => {
+        it("adds", () => {
+          const x = 0,
+            y = 0,
+            state = {};
+          expect(() => instance.addText(x, y, state)).not.toThrow();
+        });
+      });
+
+      describe("insertImage(newValue, w, h)", () => {
+        it("inserts", () => {
+          const newValue = {},
+            w = 0,
+            h = 0;
+          expect(() => instance.insertImage(newValue, w, h)).not.toThrow();
+        });
+      });
+
+      describe("isCloneEvent(evt)", () => {
+        it("is not clone", () => {
+          const evt = {};
+          expect(instance.isCloneEvent(evt)).toBeFalsy();
+        });
+      });
     });
   });
 });
