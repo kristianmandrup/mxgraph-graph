@@ -1,1 +1,1 @@
-export * from "./StencilRegistry";
+export * from "./MxStencilRegistry";

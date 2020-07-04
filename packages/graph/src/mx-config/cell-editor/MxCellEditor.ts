@@ -540,4 +540,106 @@ export const MxCellEditor = Class.extend({
       textarea.style.border = "";
     }
   },
+
+  /**
+   * HTML in-place editor
+   */
+  isContentEditing: function () {
+    var state = this.graph.view.getState(this.editingCell);
+
+    return state != null && state.style["html"] == 1;
+  },
+
+  /**
+   * Returns true if all selected text is inside a table element.
+   */
+  isTableSelected: function () {
+    return (
+      this.graph.getParentByName(
+        this.graph.getSelectedElement(),
+        "TABLE",
+        this.textarea
+      ) != null
+    );
+  },
+
+  /**
+   * Sets the alignment of the current selected cell. This sets the
+   * alignment in the cell style, removes all alignment within the
+   * text and invokes the built-in alignment function.
+   *
+   * Only the built-in function is invoked if shift is pressed or
+   * if table cells are selected and shift is not pressed.
+   */
+  alignText: function (align, evt) {
+    var shiftPressed = evt != null && mxEvent.isShiftDown(evt);
+
+    const sel: any = (window.getSelection && window.getSelection()) || {};
+
+    if (shiftPressed || sel.containsNode != null) {
+      var allSelected = true;
+
+      this.graph.processElements(this.textarea, function (node) {
+        if (shiftPressed || sel.containsNode(node, true)) {
+          node.removeAttribute("align");
+          node.style.textAlign = null;
+        } else {
+          allSelected = false;
+        }
+      });
+
+      if (allSelected) {
+        this.graph.cellEditor.setAlign(align);
+      }
+    }
+
+    document.execCommand("justify" + align.toLowerCase(), false, undefined);
+  },
+
+  /**
+   * Creates the keyboard event handler for the current graph and history.
+   */
+  saveSelection: function () {
+    const dsel: any = document["selection"] || false;
+    if (window.getSelection) {
+      var sel: any = window.getSelection() || {};
+
+      if (sel.getRangeAt && sel.rangeCount) {
+        var ranges: any[] = [];
+
+        for (var i = 0, len = sel.rangeCount; i < len; ++i) {
+          ranges.push(sel.getRangeAt(i));
+        }
+
+        return ranges;
+      }
+    } else if (dsel.createRange) {
+      return dsel.createRange();
+    }
+
+    return null;
+  },
+
+  /**
+   * Creates the keyboard event handler for the current graph and history.
+   */
+  restoreSelection: function (savedSel) {
+    try {
+      const dsel: any = document["selection"] || false;
+      const sel: any = (window.getSelection && window.getSelection()) || false;
+      if (savedSel) {
+        if (sel) {
+          sel.removeAllRanges();
+
+          for (var i = 0, len = savedSel.length; i < len; ++i) {
+            sel.addRange(savedSel[i]);
+          }
+        } else if (dsel && savedSel.select) {
+          savedSel.select();
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  },
 });
