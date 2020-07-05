@@ -34,7 +34,6 @@ export class TableChecker {
    */
   isTable(cell) {
     var style = this.getCellStyle(cell);
-
     return style != null && style["childLayout"] == "tableLayout";
   }
 }

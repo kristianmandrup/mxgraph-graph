@@ -7,7 +7,7 @@ export class WheelEvent {
    * is invoked if no dialogs are showing and returns true with Alt or Control
    * (or cmd in macOS only) is pressed.
    */
-  isZoomWheelEvent(evt) {
+  static isZoomWheelEvent(evt) {
     return (
       mxEvent.isAltDown(evt) ||
       (mxEvent.isMetaDown(evt) && mxClient.IS_MAC) ||
@@ -18,7 +18,7 @@ export class WheelEvent {
   /**
    * Returns true if the given scroll wheel event should be used for scrolling.
    */
-  isScrollWheelEvent(evt) {
+  static isScrollWheelEvent(evt) {
     return !this.isZoomWheelEvent(evt);
   }
 }
