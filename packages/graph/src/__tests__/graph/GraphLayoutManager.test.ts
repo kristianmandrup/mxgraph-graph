@@ -1,5 +1,5 @@
 import { Graph } from "../../graph";
-import { GraphLayoutManager } from "../../graph/GraphLayoutManager";
+import { GraphLayoutManager } from "../../graph";
 
 describe("GraphLayoutManager", () => {
   const opts = {};

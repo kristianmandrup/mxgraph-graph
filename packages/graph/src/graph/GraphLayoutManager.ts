@@ -19,7 +19,7 @@ export class GraphLayoutManager {
   layoutManager: any;
 
   constructor($graph: Graph) {
-    this.graph = $graph.graph;
+    this.graph = $graph;
     this.layoutManager = $graph.layoutManager;
   }
 
@@ -80,46 +80,7 @@ export class GraphLayoutManager {
 
             return treeLayout;
           } else if (style["childLayout"] == "flowLayout") {
-            var flowLayout = new mxHierarchicalLayout(
-              this.graph,
-              mxUtils.getValue(
-                style,
-                "flowOrientation",
-                mxConstants.DIRECTION_EAST
-              )
-            );
-            flowLayout.resizeParent =
-              mxUtils.getValue(style, "resizeParent", "1") == "1";
-            flowLayout.parentBorder = mxUtils.getValue(
-              style,
-              "parentPadding",
-              20
-            );
-            flowLayout.maintainParentLocation = true;
-
-            // Special undocumented styles for changing the hierarchical
-            flowLayout.intraCellSpacing = mxUtils.getValue(
-              style,
-              "intraCellSpacing",
-              mxHierarchicalLayout.prototype.intraCellSpacing
-            );
-            flowLayout.interRankCellSpacing = mxUtils.getValue(
-              style,
-              "interRankCellSpacing",
-              mxHierarchicalLayout.prototype.interRankCellSpacing
-            );
-            flowLayout.interHierarchySpacing = mxUtils.getValue(
-              style,
-              "interHierarchySpacing",
-              mxHierarchicalLayout.prototype.interHierarchySpacing
-            );
-            flowLayout.parallelEdgeSpacing = mxUtils.getValue(
-              style,
-              "parallelEdgeSpacing",
-              mxHierarchicalLayout.prototype.parallelEdgeSpacing
-            );
-
-            return flowLayout;
+            return this.flowLayout(style);
           } else if (style["childLayout"] == "circleLayout") {
             return new mxCircleLayout(this.graph);
           } else if (style["childLayout"] == "organicLayout") {
@@ -137,5 +98,40 @@ export class GraphLayoutManager {
 
       return null;
     };
+  }
+
+  flowLayout(style) {
+    var flowLayout = new mxHierarchicalLayout(
+      this.graph,
+      mxUtils.getValue(style, "flowOrientation", mxConstants.DIRECTION_EAST)
+    );
+    flowLayout.resizeParent =
+      mxUtils.getValue(style, "resizeParent", "1") == "1";
+    flowLayout.parentBorder = mxUtils.getValue(style, "parentPadding", 20);
+    flowLayout.maintainParentLocation = true;
+
+    // Special undocumented styles for changing the hierarchical
+    flowLayout.intraCellSpacing = mxUtils.getValue(
+      style,
+      "intraCellSpacing",
+      mxHierarchicalLayout.prototype.intraCellSpacing
+    );
+    flowLayout.interRankCellSpacing = mxUtils.getValue(
+      style,
+      "interRankCellSpacing",
+      mxHierarchicalLayout.prototype.interRankCellSpacing
+    );
+    flowLayout.interHierarchySpacing = mxUtils.getValue(
+      style,
+      "interHierarchySpacing",
+      mxHierarchicalLayout.prototype.interHierarchySpacing
+    );
+    flowLayout.parallelEdgeSpacing = mxUtils.getValue(
+      style,
+      "parallelEdgeSpacing",
+      mxHierarchicalLayout.prototype.parallelEdgeSpacing
+    );
+
+    return flowLayout;
   }
 }

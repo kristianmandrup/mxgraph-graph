@@ -1,7 +1,5 @@
 import mx from "@mxgraph-app/mx";
-import pako from "pako";
-import Base64 from "Base64";
-import html_sanitize from "sanitize-html";
+import { SvgImage } from "./SvgImage";
 
 type GraphOpts = { renderHint?; stylesheet?; themes?; standalone? };
 
@@ -13,7 +11,6 @@ const {
   mxGraphModel,
   mxCodec,
   mxStackLayout,
-  mxImage,
   mxObjectIdentity,
   mxRectangle,
   mxCellRenderer,
@@ -30,6 +27,16 @@ const {
 import resources from "@mxgraph-app/resources";
 import { GraphInitializer } from "../initializer/GraphInitializer";
 import { GraphLayoutManager } from "./GraphLayoutManager";
+import { GraphCssTransformConfig } from "./css";
+import { LinkManager } from "./LinkManager";
+import { Zapper } from "./Zapper";
+import { Compresser } from "./Compresser";
+import { Sanitizer } from "./Sanitizer";
+import { PlaceholderManager } from "./PlaceholderManager";
+import { CustomLinks } from "./CustomLinks";
+import { TableChecker } from "./TableChecker";
+import { VertexConnecter } from "./VertexConnecter";
+import { StringBytesConverter } from "./StringBytesConverter";
 const { urlParams } = resources;
 
 /**
@@ -103,10 +110,6 @@ export class Graph {
   resetEdgesOnConnect: any;
   constrainChildren: any;
   constrainRelativeChildren: any;
-  pageVisible?: boolean;
-  pageFormat: any;
-  pageScale: any;
-  getGraphBounds: any; // () => any
   getCellAt: any; // (x, y) => any
   cellToClone: any; // (cellToClone) => any;
   duplicateCells: any; // (any[]) => any[]
@@ -129,6 +132,12 @@ export class Graph {
     selected: false,
   };
 
+  graphLink: LinkManager;
+  placeholderManager: PlaceholderManager;
+  customLinks: CustomLinks;
+  tableChecker: TableChecker;
+  vertexConnector: VertexConnecter;
+
   /**
    * Graph inherits from mxGraph
    */
@@ -136,7 +145,13 @@ export class Graph {
   constructor(container, model, opts: GraphOpts) {
     const { renderHint, stylesheet, themes, standalone } = opts;
     const graph = new mxGraph(container);
-    this.cssTransformConfig = new this.cssTransformConfig(this);
+    this.cssTransformConfig = new GraphCssTransformConfig(this);
+    this.graphLink = new LinkManager(this);
+    this.dateFormatter = new DateFormatter();
+    this.placeholderManager = new PlaceholderManager(this);
+    this.customLinks = new CustomLinks();
+    this.tableChecker = new TableChecker(this);
+    this.vertexConnector = new VertexConnecter(this);
 
     new GraphInitializer(this).create(
       graph,
@@ -204,120 +219,11 @@ export class Graph {
    * Helper function for creating SVG data URI.
    */
   static createSvgImage(w, h, data, coordWidth?, coordHeight?) {
-    var tmp = unescape(
-      encodeURIComponent(
-        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' +
-          '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' +
-          w +
-          'px" height="' +
-          h +
-          'px" ' +
-          (coordWidth != null && coordHeight != null
-            ? 'viewBox="0 0 ' + coordWidth + " " + coordHeight + '" '
-            : "") +
-          'version="1.1">' +
-          data +
-          "</svg>"
-      )
-    );
-
-    return new mxImage(
-      "data:image/svg+xml;base64," + Base64.encode(tmp, true),
-      w,
-      h
-    );
+    return SvgImage.create(w, h, data, coordWidth, coordHeight);
   }
 
-  /**
-   * Removes all illegal control characters with ASCII code <32 except TAB, LF
-   * and CR.
-   */
   static zapGremlins(text) {
-    var checked: any[] = [];
-
-    for (var i = 0; i < text.length; i++) {
-      var code = text.charCodeAt(i);
-
-      // Removes all control chars except TAB, LF and CR
-      if (
-        (code >= 32 || code == 9 || code == 10 || code == 13) &&
-        code != 0xffff &&
-        code != 0xfffe
-      ) {
-        checked.push(text.charAt(i));
-      }
-    }
-
-    return checked.join("");
-  }
-
-  /**
-   * Turns the given string into an array.
-   */
-  static stringToBytes(str) {
-    var arr = new Array(str.length);
-
-    for (var i = 0; i < str.length; i++) {
-      arr[i] = str.charCodeAt(i);
-    }
-
-    return arr;
-  }
-
-  /**
-   * Turns the given array into a string.
-   */
-  static bytesToString(arr) {
-    var result = new Array(arr.length);
-
-    for (var i = 0; i < arr.length; i++) {
-      result[i] = String.fromCharCode(arr[i]);
-    }
-
-    return result.join("");
-  }
-
-  /**
-   * Returns a base64 encoded version of the compressed outer XML of the given node.
-   */
-  static compressNode(node, checked) {
-    var xml = mxUtils.getXml(node);
-
-    return this.compress(checked ? xml : this.zapGremlins(xml), null);
-  }
-
-  /**
-   * Returns a base64 encoded version of the compressed string.
-   */
-  static compress(data, deflate) {
-    if (data == null || data.length == 0 || typeof pako === "undefined") {
-      return data;
-    } else {
-      var tmp = deflate
-        ? pako.deflate(encodeURIComponent(data), { to: "string" })
-        : pako.deflateRaw(encodeURIComponent(data), { to: "string" });
-
-      return btoa(tmp); // : Base64.encode(tmp, true);
-    }
-  }
-
-  /**
-   * Returns a decompressed version of the base64 encoded string.
-   */
-  static decompress(data, inflate, checked) {
-    if (data == null || data.length == 0 || typeof pako === "undefined") {
-      return data;
-    } else {
-      var tmp = atob(data); // : Base64.decode(data, true);
-
-      var inflated = decodeURIComponent(
-        inflate
-          ? pako.inflate(tmp, { to: "string" })
-          : pako.inflateRaw(tmp, { to: "string" })
-      );
-
-      return checked ? inflated : Graph.zapGremlins(inflated);
-    }
+    return Zapper.zapGremlins(text);
   }
 
   /**
@@ -331,50 +237,16 @@ export class Graph {
   maxFitScale = null;
 
   /**
-   * Sets the policy for links. Possible values are "self" to replace any framesets,
-   * "blank" to load the URL in <linkTarget> and "auto" (default).
-   */
-  linkPolicy =
-    urlParams["target"] == "frame" ? "blank" : urlParams["target"] || "auto";
-
-  /**
-   * Target for links that open in a new window. Default is _blank.
-   */
-  linkTarget = urlParams["target"] == "frame" ? "_self" : "_blank";
-
-  /**
-   * Value to the rel attribute of links. Default is 'nofollow noopener noreferrer'.
-   * NOTE: There are security implications when this is changed and if noopener is removed,
-   * then <openLink> must be overridden to allow for the opener to be set by default.
-   */
-  linkRelation = "nofollow noopener noreferrer";
-
-  /**
    * Scrollbars are enabled on non-touch devices (not including Firefox because touch events
    * cannot be detected in Firefox, see above).
    */
   defaultScrollbars = !mxClient.IS_IOS;
 
   /**
-   * Specifies if the page should be visible for new files. Default is true.
-   */
-  defaultPageVisible = true;
-
-  /**
    * Specifies if the app should run in chromeless mode. Default is false.
    * This default is only used if the contructor argument is null.
    */
   lightbox = false;
-
-  /**
-   *
-   */
-  defaultPageBackgroundColor = "#ffffff";
-
-  /**
-   *
-   */
-  defaultPageBorderColor = "#ffffff";
 
   /**
    * Specifies the size of the size for "tiles" to be used for a graph with
@@ -411,16 +283,6 @@ export class Graph {
   connectionArrowsEnabled = true;
 
   /**
-   * Specifies the regular expression for matching placeholders.
-   */
-  placeholderPattern = new RegExp("%(date{.*}|[^%^{^}]+)%", "g");
-
-  /**
-   * Specifies the regular expression for matching placeholders.
-   */
-  absoluteUrlPattern = new RegExp("^(?:[a-z]+:)?//", "i");
-
-  /**
    * Specifies the default name for the theme. Default is 'default'.
    */
   defaultThemeName = "default";
@@ -429,17 +291,6 @@ export class Graph {
    * Specifies the default name for the theme. Default is 'default'.
    */
   defaultThemes = {};
-
-  /**
-   * Base URL for relative links.
-   */
-  baseUrl =
-    urlParams["base"] != null
-      ? decodeURIComponent(urlParams["base"])
-      : (window != window.top
-          ? document.referrer
-          : document.location.toString()
-        ).split("#")[0];
 
   /**
    * Specifies if the label should be edited after an insert.
@@ -467,11 +318,8 @@ export class Graph {
   init(container) {
     mxGraph.prototype.init.apply(this, [container]);
 
-    const { state, shape } = this;
-
     // Intercepts links with no target attribute and opens in new window
-    this.cellRenderer.initializeLabel(state, shape);
-    {
+    this.cellRenderer.initializeLabel = (state, shape) => {
       mxCellRenderer.prototype.initializeLabel.apply(this, [state, shape]);
 
       // Checks tolerance for clicks on links
@@ -511,7 +359,7 @@ export class Graph {
       mxEvent.addListener(shape.node, "click", function (evt) {
         mxEvent.consume(evt);
       });
-    }
+    };
 
     this.graphLayoutManager = new GraphLayoutManager(this);
     this.initLayoutManager();
@@ -531,252 +379,15 @@ export class Graph {
   /**
    * Installs automatic layout via styles
    */
-  labelLinkClicked(state, elem, evt) {
-    var href = elem.getAttribute("href");
-
-    if (
-      (href != null &&
-        !this.isCustomLink(href) &&
-        mxEvent.isLeftMouseButton(evt) &&
-        !mxEvent.isPopupTrigger(evt)) ||
-      mxEvent.isTouchEvent(evt)
-    ) {
-      if (!this.isEnabled() || this.isCellLocked(state.cell)) {
-        var target = this.isBlankLink(href) ? this.linkTarget : "_top";
-        this.openLink(this.getAbsoluteUrl(href), target);
-      }
-
-      mxEvent.consume(evt);
-    }
-  }
-
-  /**
-   * Returns the size of the page format scaled with the page size.
-   */
-  openLink(href, target, allowOpener?) {
-    var result: any = window;
-
-    try {
-      // Workaround for blocking in same iframe
-      if (target == "_self" && window != window.top) {
-        window.location.href = href;
-      } else {
-        // Avoids page reload for anchors (workaround for IE but used everywhere)
-        if (
-          href.substring(0, this.baseUrl.length) == this.baseUrl &&
-          href.charAt(this.baseUrl.length) == "#" &&
-          target == "_top" &&
-          window == window.top
-        ) {
-          var hash = href.split("#")[1];
-
-          // Forces navigation if on same hash
-          if (window.location.hash == "#" + hash) {
-            window.location.hash = "";
-          }
-
-          window.location.hash = hash;
-        } else {
-          result = window.open(href, target != null ? target : "_blank");
-
-          if (result != null && !allowOpener) {
-            result.opener = null;
-          }
-        }
-      }
-    } catch (e) {
-      // ignores permission denied
-    }
-
-    return result;
-  }
-
-  /**
-   * Adds support for page links.
-   */
-  getLinkTitle(href) {
-    return href.substring(href.lastIndexOf("/") + 1);
-  }
-
-  /**
-   * Adds support for page links.
-   */
-  isCustomLink(href) {
-    return href.substring(0, 5) == "data:";
-  }
-
-  /**
-   * Adds support for page links.
-   */
-  customLinkClicked(_link) {
-    return false;
-  }
-
-  /**
-   * Returns true if the given href references an external protocol that
-   * should never open in a new window. Default returns true for mailto.
-   */
-  isExternalProtocol(href) {
-    return href.substring(0, 7) === "mailto:";
-  }
-
-  /**
-   * Hook for links to open in same window. Default returns true for anchors,
-   * links to same domain or if target == 'self' in the config.
-   */
-  isBlankLink(href) {
-    return (
-      !this.isExternalProtocol(href) &&
-      (this.linkPolicy === "blank" ||
-        (this.linkPolicy !== "self" &&
-          !this.isRelativeUrl(href) &&
-          href.substring(0, this.domainUrl.length) !== this.domainUrl))
-    );
-  }
-
-  /**
-   *
-   */
-  isRelativeUrl(url) {
-    return (
-      url != null &&
-      !this.absoluteUrlPattern.test(url) &&
-      url.substring(0, 5) !== "data:" &&
-      !this.isExternalProtocol(url)
-    );
-  }
-
-  /**
-   *
-   */
-  getAbsoluteUrl(url) {
-    if (url != null && this.isRelativeUrl(url)) {
-      if (url.charAt(0) == "#") {
-        url = this.baseUrl + url;
-      } else if (url.charAt(0) == "/") {
-        url = this.domainUrl + url;
-      } else {
-        url = this.domainPathUrl + url;
-      }
-    }
-
-    return url;
-  }
-
-  /**
-   * Installs automatic layout via styles
-   */
   initLayoutManager() {
     this.graphLayoutManager.initLayoutManager();
   }
 
   /**
-   * Returns the size of the page format scaled with the page size.
-   */
-  getPageSize() {
-    return this.pageVisible
-      ? new mxRectangle(
-          0,
-          0,
-          this.pageFormat.width * this.pageScale,
-          this.pageFormat.height * this.pageScale
-        )
-      : this.scrollTileSize;
-  }
-
-  /**
-   * Returns a rectangle describing the position and count of the
-   * background pages, where x and y are the position of the top,
-   * left page and width and height are the vertical and horizontal
-   * page count.
-   */
-  getPageLayout() {
-    var size = this.getPageSize();
-    var bounds = this.getGraphBounds();
-
-    if (bounds.width == 0 || bounds.height == 0) {
-      return new mxRectangle(0, 0, 1, 1);
-    } else {
-      var x0 = Math.floor(
-        Math.ceil(bounds.x / this.view.scale - this.view.translate.x) /
-          size.width
-      );
-      var y0 = Math.floor(
-        Math.ceil(bounds.y / this.view.scale - this.view.translate.y) /
-          size.height
-      );
-      var w0 =
-        Math.ceil(
-          (Math.floor((bounds.x + bounds.width) / this.view.scale) -
-            this.view.translate.x) /
-            size.width
-        ) - x0;
-      var h0 =
-        Math.ceil(
-          (Math.floor((bounds.y + bounds.height) / this.view.scale) -
-            this.view.translate.y) /
-            size.height
-        ) - y0;
-
-      return new mxRectangle(x0, y0, w0, h0);
-    }
-  }
-
-  /**
    * Sanitizes the given HTML markup.
    */
-  sanitizeHtml(value, _editing?) {
-    // Uses https://code.google.com/p/google-caja/wiki/JsHtmlSanitizer
-    // NOTE: Original minimized sanitizer was modified to support
-    // data URIs for images, mailto and special data:-links.
-    // LATER: Add MathML to whitelisted tags
-    function urlX(link) {
-      if (
-        link != null &&
-        link.toString().toLowerCase().substring(0, 11) !== "javascript:"
-      ) {
-        return link;
-      }
-
-      return null;
-    }
-    function idX(id) {
-      return id;
-    }
-
-    return html_sanitize(value, urlX, idX);
-  }
-
-  /**
-   * Revalidates all cells with placeholders in the current graph model.
-   */
-  updatePlaceholders() {
-    // var model = this.model;
-    var validate = false;
-
-    for (var key in this.model.cells) {
-      var cell = this.model.cells[key];
-
-      if (this.isReplacePlaceholders(cell)) {
-        this.view.invalidate(cell, false, false);
-        validate = true;
-      }
-    }
-
-    if (validate) {
-      this.view.validate();
-    }
-  }
-
-  /**
-   * Adds support for placeholders in labels.
-   */
-  isReplacePlaceholders(cell) {
-    return (
-      cell.value != null &&
-      typeof cell.value == "object" &&
-      cell.value.getAttribute("placeholders") == "1"
-    );
+  sanitizeHtml(value, editing?) {
+    return Sanitizer.sanitizeHtml(value, editing);
   }
 
   /**
@@ -826,23 +437,6 @@ export class Graph {
       !mxEvent.isShiftDown(evt) &&
       mxGraph.prototype.isSplitTarget.apply(this, [target, cells, evt])
     );
-  }
-
-  /**
-   * Adds support for placeholders in labels.
-   */
-  getLabel(cell) {
-    var result = mxGraph.prototype.getLabel.apply(this, [cell]);
-
-    if (
-      result != null &&
-      this.isReplacePlaceholders(cell) &&
-      cell.getAttribute("placeholder") == null
-    ) {
-      result = this.replacePlaceholders(cell, result);
-    }
-
-    return result;
   }
 
   // DEPRECATED!?
@@ -914,159 +508,13 @@ export class Graph {
     return val;
   }
 
+  dateFormatter: DateFormatter;
+
   /**
    * Formats a date, see http://blog.stevenlevithan.com/archives/date-time-format
    */
   formatDate(date, mask, utc?) {
-    // LATER: Cache regexs
-    if (this.dateFormatCache == null) {
-      this.dateFormatCache = {
-        i18n: {
-          dayNames: [
-            "Sun",
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-          ],
-          monthNames: [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ],
-        },
-
-        masks: {
-          default: "ddd mmm dd yyyy HH:MM:ss",
-          shortDate: "m/d/yy",
-          mediumDate: "mmm d, yyyy",
-          longDate: "mmmm d, yyyy",
-          fullDate: "dddd, mmmm d, yyyy",
-          shortTime: "h:MM TT",
-          mediumTime: "h:MM:ss TT",
-          longTime: "h:MM:ss TT Z",
-          isoDate: "yyyy-mm-dd",
-          isoTime: "HH:MM:ss",
-          isoDateTime: "yyyy-mm-dd'T'HH:MM:ss",
-          isoUtcDateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'",
-        },
-      };
-    }
-
-    var dF = this.dateFormatCache;
-    var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g,
-      timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[-+]\d{4})?)\b/g,
-      timezoneClip = /[^-+\dA-Z]/g,
-      pad = (val, len?) => {
-        val = String(val);
-        len = len || 2;
-        while (val.length < len) val = "0" + val;
-        return val;
-      };
-
-    // You can't provide utc if you skip other args (use the "UTC:" mask prefix)
-    if (
-      arguments.length == 1 &&
-      Object.prototype.toString.call(date) == "[object String]" &&
-      !/\d/.test(date)
-    ) {
-      mask = date;
-      date = undefined;
-    }
-
-    // Passing date through Date applies Date.parse, if necessary
-    date = date ? new Date(date) : new Date();
-    if (isNaN(date)) throw SyntaxError("invalid date");
-
-    mask = String(dF.masks[mask] || mask || dF.masks["default"]);
-
-    // Allow setting the utc argument via the mask
-    if (mask.slice(0, 4) == "UTC:") {
-      mask = mask.slice(4);
-      utc = true;
-    }
-
-    var _ = utc ? "getUTC" : "get",
-      d = date[_ + "Date"](),
-      D = date[_ + "Day"](),
-      m = date[_ + "Month"](),
-      y = date[_ + "FullYear"](),
-      H = date[_ + "Hours"](),
-      M = date[_ + "Minutes"](),
-      s = date[_ + "Seconds"](),
-      L = date[_ + "Milliseconds"](),
-      o = utc ? 0 : date.getTimezoneOffset();
-    const tz: any = String(date).match(timezone) || [""];
-    const Z = utc ? "UTC" : tz.pop().replace(timezoneClip, "");
-    o =
-      (o > 0 ? "-" : "+") +
-      pad(Math.floor(Math.abs(o) / 60) * 100 + (Math.abs(o) % 60), 4);
-    const $s: any = (d % 100) - (d % 10) != 10;
-    const S = ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : ($s * d) % 10];
-
-    var flags = {
-      d: d,
-      dd: pad(d),
-      ddd: dF.i18n.dayNames[D],
-      dddd: dF.i18n.dayNames[D + 7],
-      m: m + 1,
-      mm: pad(m + 1),
-      mmm: dF.i18n.monthNames[m],
-      mmmm: dF.i18n.monthNames[m + 12],
-      yy: String(y).slice(2),
-      yyyy: y,
-      h: H % 12 || 12,
-      hh: pad(H % 12 || 12),
-      H: H,
-      HH: pad(H),
-      M: M,
-      MM: pad(M),
-      s: s,
-      ss: pad(s),
-      l: pad(L, 3),
-      L: pad(L > 99 ? Math.round(L / 10) : L),
-      t: H < 12 ? "a" : "p",
-      tt: H < 12 ? "am" : "pm",
-      T: H < 12 ? "A" : "P",
-      TT: H < 12 ? "AM" : "PM",
-      Z,
-      o,
-      S,
-    };
-
-    return mask.replace(token, function ($0) {
-      return $0 in flags ? flags[$0] : $0.slice(1, $0.length - 1);
-    });
+    return this.dateFormatter.formatDate(date, mask, utc);
   }
 
   /**
@@ -1122,61 +570,6 @@ export class Graph {
   }
 
   /**
-   * Private helper method.
-   */
-  replacePlaceholders(cell, str) {
-    var result: any[] = [];
-
-    if (str != null) {
-      var last = 0;
-      var match: any;
-      while ((match = this.placeholderPattern.exec(str))) {
-        var val = match[0];
-
-        if (val.length > 2 && val != "%label%" && val != "%tooltip%") {
-          var tmp = null;
-
-          if (match.index > last && str.charAt(match.index - 1) == "%") {
-            tmp = val.substring(1);
-          } else {
-            var name = val.substring(1, val.length - 1);
-
-            // Workaround for invalid char for getting attribute in older versions of IE
-            if (name.indexOf("{") < 0) {
-              var current = cell;
-
-              while (tmp == null && current != null) {
-                if (current.value != null && typeof current.value == "object") {
-                  tmp = current.hasAttribute(name)
-                    ? current.getAttribute(name) != null
-                      ? current.getAttribute(name)
-                      : ""
-                    : null;
-                }
-
-                current = this.model.getParent(current);
-              }
-            }
-
-            if (tmp == null) {
-              tmp = this.getGlobalVariable(name);
-            }
-          }
-
-          result.push(
-            str.substring(last, match.index) + (tmp != null ? tmp : val)
-          );
-          last = match.index + val.length;
-        }
-      }
-
-      result.push(str.substring(last));
-    }
-
-    return result.join("");
-  }
-
-  /**
    * Resolves the given cells in the model and selects them.
    */
   restoreSelection(cells) {
@@ -1197,254 +590,16 @@ export class Graph {
     }
   }
 
-  /**
-   * Selects cells for connect vertex return value.
-   */
-  selectCellsForConnectVertex(cells, evt, hoverIcons) {
-    // Selects only target vertex if one exists
-    if (cells.length == 2 && this.model.isVertex(cells[1])) {
-      this.setSelectionCell(cells[1]);
-      this.scrollCellToVisible(cells[1]);
-
-      if (hoverIcons != null) {
-        // Adds hover icons for cloned vertex or hides icons
-        if (mxEvent.isTouchEvent(evt)) {
-          hoverIcons.update(hoverIcons.getState(this.view.getState(cells[1])));
-        } else {
-          hoverIcons.reset();
-        }
-      }
-    } else {
-      this.setSelectionCells(cells);
-    }
+  getLabel(cell) {
+    return this.placeholderManager.getLabel(cell);
   }
 
-  /**
-   * Adds a connection to the given vertex.
-   */
-  connectVertex(source, direction, length, evt, forceClone, ignoreCellAt) {
-    // Ignores relative edge labels
-    if (source.geometry.relative && this.model.isEdge(source.parent)) {
-      return [];
-    }
+  isReplacePlaceholders(cell) {
+    return this.placeholderManager.isReplacePlaceholders(cell);
+  }
 
-    ignoreCellAt = ignoreCellAt ? ignoreCellAt : false;
-
-    var pt =
-      source.geometry.relative && source.parent.geometry != null
-        ? new mxPoint(
-            source.parent.geometry.width * source.geometry.x,
-            source.parent.geometry.height * source.geometry.y
-          )
-        : new mxPoint(source.geometry.x, source.geometry.y);
-
-    if (direction == mxConstants.DIRECTION_NORTH) {
-      pt.x += source.geometry.width / 2;
-      pt.y -= length;
-    } else if (direction == mxConstants.DIRECTION_SOUTH) {
-      pt.x += source.geometry.width / 2;
-      pt.y += source.geometry.height + length;
-    } else if (direction == mxConstants.DIRECTION_WEST) {
-      pt.x -= length;
-      pt.y += source.geometry.height / 2;
-    } else {
-      pt.x += source.geometry.width + length;
-      pt.y += source.geometry.height / 2;
-    }
-
-    var parentState = this.view.getState(this.model.getParent(source));
-    var s = this.view.scale;
-    var t = this.view.translate;
-    var dx = t.x * s;
-    var dy = t.y * s;
-
-    if (parentState != null && this.model.isVertex(parentState.cell)) {
-      dx = parentState.x;
-      dy = parentState.y;
-    }
-
-    // Workaround for relative child cells
-    if (this.model.isVertex(source.parent) && source.geometry.relative) {
-      pt.x += source.parent.geometry.x;
-      pt.y += source.parent.geometry.y;
-    }
-
-    // Checks actual end point of edge for target cell
-    var target =
-      ignoreCellAt || (mxEvent.isControlDown(evt) && !forceClone)
-        ? null
-        : this.getCellAt(dx + pt.x * s, dy + pt.y * s);
-
-    if (this.model.isAncestor(target, source)) {
-      target = null;
-    }
-
-    // Checks if target or ancestor is locked
-    var temp = target;
-
-    while (temp != null) {
-      if (this.isCellLocked(temp)) {
-        target = null;
-        break;
-      }
-
-      temp = this.model.getParent(temp);
-    }
-
-    // Checks if source and target intersect
-    if (target != null) {
-      var sourceState = this.view.getState(source);
-      var targetState = this.view.getState(target);
-
-      if (
-        sourceState != null &&
-        targetState != null &&
-        mxUtils.intersects(sourceState, targetState)
-      ) {
-        target = null;
-      }
-    }
-
-    var duplicate = !mxEvent.isShiftDown(evt) || forceClone;
-
-    if (duplicate) {
-      if (direction == mxConstants.DIRECTION_NORTH) {
-        pt.y -= source.geometry.height / 2;
-      } else if (direction == mxConstants.DIRECTION_SOUTH) {
-        pt.y += source.geometry.height / 2;
-      } else if (direction == mxConstants.DIRECTION_WEST) {
-        pt.x -= source.geometry.width / 2;
-      } else {
-        pt.x += source.geometry.width / 2;
-      }
-    }
-
-    // Uses connectable parent vertex if one exists
-    if (target != null && !this.isCellConnectable(target)) {
-      var parent = this.getModel().getParent(target);
-
-      if (this.getModel().isVertex(parent) && this.isCellConnectable(parent)) {
-        target = parent;
-      }
-    }
-
-    if (
-      target == source ||
-      this.model.isEdge(target) ||
-      !this.isCellConnectable(target)
-    ) {
-      target = null;
-    }
-
-    var result: any[] = [];
-
-    this.model.beginUpdate();
-    try {
-      var swimlane = target != null && this.isSwimlane(target);
-      var realTarget = !swimlane ? target : null;
-
-      if (realTarget == null && duplicate) {
-        // Handles relative children
-        var cellToClone = source;
-        var geo = this.getCellGeometry(source);
-
-        while (geo != null && geo.relative) {
-          cellToClone = this.getModel().getParent(cellToClone);
-          geo = this.getCellGeometry(cellToClone);
-        }
-
-        // Handle consistuents for cloning
-        cellToClone = this.getCompositeParent(cellToClone);
-        realTarget = this.duplicateCells([cellToClone], false)[0];
-
-        var geo = this.getCellGeometry(realTarget);
-
-        if (geo != null) {
-          geo.x = pt.x - geo.width / 2;
-          geo.y = pt.y - geo.height / 2;
-        }
-
-        if (swimlane) {
-          this.addCells([realTarget], target, null, null, null, true);
-          target = null;
-        }
-      }
-
-      // Never connects children in stack layouts
-      var layout: any;
-
-      if (this.layoutManager != null) {
-        layout = this.layoutManager.getLayout(this.model.getParent(source));
-      }
-
-      var edge =
-        (mxEvent.isControlDown(evt) && duplicate) ||
-        (target == null &&
-          layout != null &&
-          layout.constructor == mxStackLayout)
-          ? null
-          : this.insertEdge(
-              this.model.getParent(source),
-              null,
-              "",
-              source,
-              realTarget,
-              this.createCurrentEdgeStyle()
-            );
-
-      // Inserts edge before source
-      if (edge != null && this.connectionHandler.insertBeforeSource) {
-        var index: any;
-        var tmp = source;
-
-        while (
-          tmp.parent != null &&
-          tmp.geometry != null &&
-          tmp.geometry.relative &&
-          tmp.parent != edge.parent
-        ) {
-          tmp = this.model.getParent(tmp);
-        }
-
-        if (tmp != null && tmp.parent != null && tmp.parent == edge.parent) {
-          index = tmp.parent.getIndex(tmp);
-          this.model.add(tmp.parent, edge, index);
-        }
-      }
-
-      // Special case: Click on west icon puts clone before cell
-      if (
-        target == null &&
-        realTarget != null &&
-        layout != null &&
-        source.parent != null &&
-        layout.constructor == mxStackLayout &&
-        direction == mxConstants.DIRECTION_WEST
-      ) {
-        var index = source.parent.getIndex(source);
-        this.model.add(source.parent, realTarget, index);
-      }
-
-      if (edge != null) {
-        result.push(edge);
-      }
-
-      if (target == null && realTarget != null) {
-        result.push(realTarget);
-      }
-
-      if (realTarget == null && edge != null) {
-        edge.geometry.setTerminalPoint(pt, false);
-      }
-
-      if (edge != null) {
-        this.fireEvent(new mxEventObject("cellsInserted", "cells", [edge]));
-      }
-    } finally {
-      this.model.endUpdate();
-    }
-
-    return result;
+  replacePlaceholders(cell, tmp) {
+    return this.placeholderManager.replacePlaceholders(cell, tmp);
   }
 
   /**
@@ -1779,17 +934,6 @@ export class Graph {
   }
 
   /**
-   * Adds a connectable style.
-   */
-  isCellConnectable(cell) {
-    var style = this.getCurrentCellStyle(cell);
-
-    return style["connectable"] != null
-      ? style["connectable"] != "0"
-      : mxGraph.prototype.isCellConnectable.apply(this, [cell]);
-  }
-
-  /**
    * Adds labelMovable style.
    */
   isLabelMovable(cell) {
@@ -1879,6 +1023,11 @@ export class Graph {
           ((this.isContainer(cell) && style["collapsible"] != "0") ||
             (!this.isContainer(cell) && style["collapsible"] == "1"))))
     );
+  }
+
+  // TODO: move to custom links?
+  isCustomLink(href) {
+    return this.graphLink.isCustomLink(href);
   }
 
   /**
@@ -2017,28 +1166,32 @@ export class Graph {
    * Turns the given string into an array.
    */
   stringToBytes(str) {
-    return Graph.stringToBytes(str);
+    return StringBytesConverter.stringToBytes(str);
   }
 
   /**
    * Turns the given array into a string.
    */
   bytesToString(arr) {
-    return Graph.bytesToString(arr);
+    return StringBytesConverter.bytesToString(arr);
   }
 
   /**
    * Returns a base64 encoded version of the compressed outer XML of the given node.
    */
   compressNode(node) {
-    return Graph.compressNode(node, null);
+    return Compresser.compressNode(node, null);
   }
 
   /**
    * Returns a base64 encoded version of the compressed string.
    */
   compress(data, deflate) {
-    return Graph.compress(data, deflate);
+    return Compresser.compress(data, deflate);
+  }
+
+  static decompress(data, inflate, checked) {
+    return Compresser.decompress(data, inflate, checked);
   }
 
   /**
@@ -2052,7 +1205,7 @@ export class Graph {
    * Redirects to static zapGremlins.
    */
   zapGremlins(text) {
-    return Graph.zapGremlins(text);
+    return Zapper.zapGremlins(text);
   }
 
   /**
@@ -2186,29 +1339,6 @@ export class Graph {
   }
 
   /**
-   * Returns true if the given cell is a table cell.
-   */
-  isTableCell(cell) {
-    return this.isTableRow(this.model.getParent(cell));
-  }
-
-  /**
-   * Returns true if the given cell is a table row.
-   */
-  isTableRow(cell) {
-    return this.isTable(this.model.getParent(cell));
-  }
-
-  /**
-   * Returns true if the given cell is a table.
-   */
-  isTable(cell) {
-    var style = this.getCellStyle(cell);
-
-    return style != null && style["childLayout"] == "tableLayout";
-  }
-
-  /**
    * Updates column width and row height.
    */
   getActualStartSize(swimlane, ignoreState?) {
@@ -2272,204 +1402,6 @@ export class Graph {
     }
 
     return result;
-  }
-
-  /**
-   * Updates column width and row height.
-   */
-  tableResized(table) {
-    console.log("tableLayout.tableResized", table);
-    var model = this.getModel();
-    var rowCount = model.getChildCount(table);
-    var tableGeo = this.getCellGeometry(table);
-
-    if (tableGeo != null && rowCount > 0) {
-      var off = this.getActualStartSize(table);
-      var y = off.y;
-
-      for (var i = 0; i < rowCount; i++) {
-        var row = model.getChildAt(table, i);
-
-        if (row != null && model.isVertex(row)) {
-          var rowGeo = this.getCellGeometry(row);
-
-          if (rowGeo != null) {
-            if (i == rowCount - 1) {
-              var newRowGeo = rowGeo.clone();
-              newRowGeo.width = tableGeo.width - off.x;
-
-              if (y < tableGeo.height) {
-                newRowGeo.height = tableGeo.height - y;
-              } else if (y > tableGeo.height) {
-                tableGeo.height = y + Graph.minTableRowHeight;
-                newRowGeo.height = Graph.minTableRowHeight;
-              }
-
-              model.setGeometry(row, newRowGeo);
-              this.tableRowResized(row, newRowGeo, rowGeo);
-            }
-
-            y += rowGeo.height;
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Updates column width and row height.
-   */
-  setRowHeight(row, height) {
-    var model = this.getModel();
-
-    model.beginUpdate();
-    try {
-      for (var i = 0; i < model.getChildCount(row); i++) {
-        var child = model.getChildAt(row, i);
-
-        if (model.isVertex(child)) {
-          var childGeo = this.getCellGeometry(child);
-
-          if (childGeo != null) {
-            childGeo = childGeo.clone();
-            childGeo.height = height;
-            model.setGeometry(child, childGeo);
-          }
-        }
-      }
-    } finally {
-      model.endUpdate();
-    }
-  }
-
-  /**
-   * Updates column width and row height.
-   */
-  tableRowResized(row, bounds, prev) {
-    console.log("tableLayout.tableRowResized", row);
-    var model = this.getModel();
-    var rowGeo = this.getCellGeometry(row);
-    var cellCount = model.getChildCount(row);
-
-    if (rowGeo != null && cellCount > 0) {
-      var off = this.getActualStartSize(row);
-      var x = off.x;
-
-      for (var i = 0; i < cellCount; i++) {
-        var cell = model.getChildAt(row, i);
-
-        if (cell != null && model.isVertex(cell)) {
-          var geo = this.getCellGeometry(cell);
-
-          if (geo != null) {
-            var newGeo = geo.clone();
-            newGeo.height = rowGeo.height - off.y;
-            model.setGeometry(cell, newGeo);
-
-            if (i == cellCount - 1) {
-              if (x < rowGeo.width) {
-                newGeo.width = rowGeo.width - x;
-              } else if (x > rowGeo.width) {
-                rowGeo.width = x + Graph.minTableColumnWidth;
-                newGeo.width = Graph.minTableColumnWidth;
-              }
-
-              this.tableCellResized(cell, newGeo, geo);
-            }
-
-            x += geo.width;
-          }
-        }
-      }
-    }
-
-    // Updates previous row height if upper edge was moved
-    var table = model.getParent(row);
-    var index = table.getIndex(row);
-
-    if (bounds.y != prev.y && index > 0) {
-      var previousRow = model.getChildAt(table, index - 1);
-      var prg = this.getCellGeometry(previousRow);
-
-      if (prg != null) {
-        prg = prg.clone();
-        prg.height -= prev.y - bounds.y;
-        model.setGeometry(previousRow, prg);
-      }
-    }
-  }
-
-  /**
-   * Updates column width and row height.
-   */
-  tableCellResized(cell, bounds, prev) {
-    console.log("tableLayout.tableCellResized", cell, bounds, prev);
-    var geo = this.getCellGeometry(cell);
-
-    if (geo != null) {
-      var model = this.getModel();
-      var row = model.getParent(cell);
-      var table = model.getParent(row);
-      var index = row.getIndex(cell);
-
-      // Applies new height to all cells in the row
-      if (bounds.height != prev.height) {
-        this.setRowHeight(row, geo.height);
-      }
-
-      // Updates column width
-      var previousRow = null;
-
-      for (var i = 0; i < model.getChildCount(table); i++) {
-        var currentRow = model.getChildAt(table, i);
-
-        if (model.isVertex(currentRow)) {
-          var child = model.getChildAt(currentRow, index);
-
-          if (cell != child) {
-            var childGeo = this.getCellGeometry(child);
-
-            if (childGeo != null) {
-              childGeo = childGeo.clone();
-              childGeo.width = geo.width;
-              model.setGeometry(child, childGeo);
-            }
-          }
-
-          // Updates previous row height
-          if (bounds.y != prev.y && currentRow == row && previousRow != null) {
-            var prg = this.getCellGeometry(previousRow);
-
-            if (prg != null) {
-              this.setRowHeight(previousRow, prg.height - prev.y + bounds.y);
-            }
-          }
-
-          previousRow = currentRow;
-        }
-      }
-
-      // Updates previous column width
-      if (bounds.x != prev.x && index > 0) {
-        var child = model.getChildAt(row, index - 1);
-        var childGeo = this.getCellGeometry(child);
-
-        if (childGeo != null) {
-          var newChildGeo = childGeo.clone();
-          newChildGeo.width -= prev.x - bounds.x;
-          model.setGeometry(child, newChildGeo);
-
-          this.tableCellResized(child, newChildGeo, childGeo);
-        }
-      }
-    }
-  }
-
-  /**
-   * Hook for subclassers.
-   */
-  getPagePadding() {
-    return new mxPoint(0, 0);
   }
 
   /**
@@ -2566,6 +1498,10 @@ export class Graph {
     return codec.encode(model);
   }
 
+  updateCustomLinks(cellMapping, clones) {
+    this.customLinks.updateCustomLinks(cellMapping, clones);
+  }
+
   /**
    * Overrides cloning cells in moveCells.
    */
@@ -2592,24 +1528,6 @@ export class Graph {
       this.updateCustomLinks(cellMapping, result);
     }
     return result;
-  }
-
-  /**
-   * Updates cells IDs for custom links in the given cells.
-   */
-  updateCustomLinks(mapping, cells) {
-    for (var i = 0; i < cells.length; i++) {
-      if (cells[i] != null) {
-        this.updateCustomLinksForCell(mapping, cells[i]);
-      }
-    }
-  }
-
-  /**
-   * Updates cell IDs in custom links on the given cell and its label.
-   */
-  updateCustomLinksForCell(_mapping, _cell) {
-    // Hook for subclassers
   }
 
   /**

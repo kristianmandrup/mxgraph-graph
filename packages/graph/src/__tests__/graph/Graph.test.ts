@@ -88,45 +88,6 @@ describe("Graph", () => {
           expect(() => Graph.zapGremlins(text)).not.toThrow();
         });
       });
-
-      describe("stringToBytes", () => {
-        const str = "xyz";
-        it("is true", () => {
-          expect(() => Graph.stringToBytes(str)).not.toThrow();
-        });
-      });
-
-      describe("bytesToString", () => {
-        const arr = ["xyz"];
-        it("is true", () => {
-          expect(() => Graph.bytesToString(arr)).not.toThrow();
-        });
-      });
-
-      describe("compressNode", () => {
-        const node = {},
-          checked = true;
-        it("is true", () => {
-          expect(() => Graph.compressNode(node, checked)).not.toThrow();
-        });
-      });
-
-      describe("compressNode", () => {
-        const data = "abc",
-          deflate = true;
-        it("is true", () => {
-          expect(() => Graph.compress(data, deflate)).not.toThrow();
-        });
-      });
-
-      describe("compressNode", () => {
-        const data = "abc",
-          inflate = true,
-          checked = true;
-        it("is true", () => {
-          expect(() => Graph.decompress(data, inflate, checked)).not.toThrow();
-        });
-      });
     });
   });
 
@@ -176,7 +137,7 @@ describe("Graph", () => {
 
       describe("defaultScrollbars", () => {
         it("is set", () => {
-          expect(instance.defaultScrollbars).toBeFalsy();
+          expect(instance.defaultScrollbars).toBeDefined();
         });
       });
 
@@ -211,7 +172,7 @@ describe("Graph", () => {
       });
 
       describe("transparentBackground", () => {
-        it("is false", () => {
+        it("is true", () => {
           expect(instance.transparentBackground).toBeTruthy();
         });
       });
@@ -223,7 +184,7 @@ describe("Graph", () => {
       });
 
       describe("defaultEdgeLength", () => {
-        it("is false", () => {
+        it("is 80", () => {
           expect(instance.defaultEdgeLength).toEqual(80);
         });
       });
@@ -235,19 +196,19 @@ describe("Graph", () => {
       });
 
       describe("connectionArrowsEnabled", () => {
-        it("is false", () => {
+        it("is true", () => {
           expect(instance.connectionArrowsEnabled).toBeTruthy();
         });
       });
 
       describe("placeholderPattern", () => {
-        it("is false", () => {
+        it("is set", () => {
           expect(instance.placeholderPattern).toBeDefined();
         });
       });
 
       describe("absoluteUrlPattern", () => {
-        it("is false", () => {
+        it("is set", () => {
           expect(instance.absoluteUrlPattern).toBeDefined();
         });
       });
@@ -259,13 +220,13 @@ describe("Graph", () => {
       });
 
       describe("defaultThemes", () => {
-        it("is false", () => {
+        it("is empty object", () => {
           expect(instance.defaultThemes).toEqual({});
         });
       });
 
       describe("baseUrl", () => {
-        it("is false", () => {
+        it("is set", () => {
           expect(instance.baseUrl).toBeDefined();
         });
       });
@@ -277,7 +238,7 @@ describe("Graph", () => {
       });
 
       describe("builtInProperties", () => {
-        it("is false", () => {
+        it("is set", () => {
           expect(instance.builtInProperties).toEqual([
             "label",
             "tooltip",
@@ -390,7 +351,7 @@ describe("Graph", () => {
         });
       });
 
-      // - Url class
+      // - UrlChecker class
       describe("isRelativeUrl(url)", () => {
         it("is relative", () => {
           const url = "/x";
