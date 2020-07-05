@@ -2,6 +2,7 @@ import { Graph } from "./Graph";
 
 export class GraphTableManager {
   graph: Graph;
+  createVertex: any; // (x, a, x,x,x,x,) =>
 
   getModel() {
     return this.graph.getModel();
@@ -15,8 +16,58 @@ export class GraphTableManager {
     return this.graph.getActualStartSize(table);
   }
 
+  createParent(parent, child, childCount) {
+    return this.graph.createParent(parent, child, childCount);
+  }
+
   constructor($graph: Graph) {
     this.graph = $graph;
+  }
+
+  // createVertex() {
+  //   return this.graph.createVertex()
+  // }
+
+  createTable(rowCount, colCount, w, h) {
+    w = w != null ? w : 40;
+    h = h != null ? h : 30;
+
+    return this.createParent(
+      this.createVertex(
+        null,
+        null,
+        "",
+        0,
+        0,
+        colCount * w,
+        rowCount * h,
+        "html=1;whiteSpace=wrap;container=1;collapsible=0;childLayout=tableLayout;"
+      ),
+      this.createParent(
+        this.createVertex(
+          null,
+          null,
+          "",
+          0,
+          0,
+          colCount * w,
+          h,
+          "html=1;whiteSpace=wrap;container=1;collapsible=0;points=[[0,0.5],[1,0.5]];part=1;"
+        ),
+        this.createVertex(
+          null,
+          null,
+          "",
+          0,
+          0,
+          w,
+          h,
+          "html=1;whiteSpace=wrap;connectable=0;part=1;"
+        ),
+        colCount
+      ),
+      rowCount
+    );
   }
 
   /**

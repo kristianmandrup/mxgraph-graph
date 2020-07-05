@@ -13,7 +13,6 @@ const {
   mxStackLayout,
   mxObjectIdentity,
   mxRectangle,
-  mxCellRenderer,
   mxEventObject,
   mxConstants,
   mxClient,
@@ -25,8 +24,7 @@ const {
 } = mx;
 
 import resources from "@mxgraph-app/resources";
-import { GraphInitializer } from "../initializer/GraphInitializer";
-import { GraphLayoutManager } from "./GraphLayoutManager";
+import { GraphContainerInitializer } from "./GraphContainerInitializer";
 import { GraphCssTransformConfig } from "./css";
 import { LinkManager } from "./LinkManager";
 import { Zapper } from "./Zapper";
@@ -37,6 +35,12 @@ import { CustomLinks } from "./CustomLinks";
 import { TableChecker } from "./TableChecker";
 import { VertexConnecter } from "./VertexConnecter";
 import { StringBytesConverter } from "./StringBytesConverter";
+import { Zoomer } from "./Zoomer";
+import { WheelEvent } from "./WheelEvent";
+import { GraphInitializer } from "../initializer";
+import { GlobalVar } from "./GlobalVar";
+import { DateFormatter } from "./DateFormatter";
+import { ValueConverter } from "./ValueConverter";
 const { urlParams } = resources;
 
 /**
@@ -137,22 +141,35 @@ export class Graph {
   customLinks: CustomLinks;
   tableChecker: TableChecker;
   vertexConnector: VertexConnecter;
+  zoomer: Zoomer;
+  graphInitializer: GraphContainerInitializer;
+  wheelEvent: WheelEvent;
+  valueConverter: ValueConverter;
 
   /**
    * Graph inherits from mxGraph
    */
   // mxUtils.extend(Graph, mxGraph);
   constructor(container, model, opts: GraphOpts) {
-    const { renderHint, stylesheet, themes, standalone } = opts;
-    const graph = new mxGraph(container);
+    this.container = container;
+    this.model = model;
+    this.graph = new mxGraph(container);
     this.cssTransformConfig = new GraphCssTransformConfig(this);
     this.graphLink = new LinkManager(this);
-    this.dateFormatter = new DateFormatter();
     this.placeholderManager = new PlaceholderManager(this);
     this.customLinks = new CustomLinks();
     this.tableChecker = new TableChecker(this);
     this.vertexConnector = new VertexConnecter(this);
+    this.zoomer = new Zoomer(this);
+    this.graphInitializer = new GraphContainerInitializer(this);
+    this.wheelEvent = new WheelEvent();
+    this.valueConverter = new ValueConverter(this);
+    this.initialize(opts);
+  }
 
+  initialize(opts) {
+    const { renderHint, stylesheet, themes, standalone } = opts;
+    const { container, model, graph } = this;
     new GraphInitializer(this).create(
       graph,
       container,
@@ -224,6 +241,14 @@ export class Graph {
 
   static zapGremlins(text) {
     return Zapper.zapGremlins(text);
+  }
+
+  isZoomWheelEvent(evt) {
+    return this.wheelEvent.isZoomWheelEvent(evt);
+  }
+
+  isScrollWheelEvent(evt) {
+    return this.wheelEvent.isScrollWheelEvent(evt);
   }
 
   /**
@@ -316,56 +341,9 @@ export class Graph {
    * Installs child layout styles.
    */
   init(container) {
-    mxGraph.prototype.init.apply(this, [container]);
-
-    // Intercepts links with no target attribute and opens in new window
-    this.cellRenderer.initializeLabel = (state, shape) => {
-      mxCellRenderer.prototype.initializeLabel.apply(this, [state, shape]);
-
-      // Checks tolerance for clicks on links
-      var tol = state.view.graph.tolerance;
-      var handleClick = true;
-      var first: any;
-
-      var down = (evt) => {
-        handleClick = true;
-        first = new mxPoint(mxEvent.getClientX(evt), mxEvent.getClientY(evt));
-      };
-
-      var move = (evt) => {
-        handleClick =
-          handleClick &&
-          first != null &&
-          Math.abs(first.x - mxEvent.getClientX(evt)) < tol &&
-          Math.abs(first.y - mxEvent.getClientY(evt)) < tol;
-      };
-
-      var up = (evt) => {
-        if (handleClick) {
-          var elt = mxEvent.getSource(evt);
-
-          while (elt != null && elt != shape.node) {
-            if (elt.nodeName.toLowerCase() == "a") {
-              state.view.graph.labelLinkClicked(state, elt, evt);
-              break;
-            }
-
-            elt = elt.parentNode;
-          }
-        }
-      };
-
-      mxEvent.addGestureListeners(shape.node, down, move, up);
-      mxEvent.addListener(shape.node, "click", function (evt) {
-        mxEvent.consume(evt);
-      });
-    };
-
-    this.graphLayoutManager = new GraphLayoutManager(this);
-    this.initLayoutManager();
+    this.graphInitializer.init(container);
   }
 
-  graphLayoutManager: any;
   cssTransformConfig: any;
 
   get isLightboxView() {
@@ -377,37 +355,10 @@ export class Graph {
   }
 
   /**
-   * Installs automatic layout via styles
-   */
-  initLayoutManager() {
-    this.graphLayoutManager.initLayoutManager();
-  }
-
-  /**
    * Sanitizes the given HTML markup.
    */
   sanitizeHtml(value, editing?) {
     return Sanitizer.sanitizeHtml(value, editing);
-  }
-
-  /**
-   * Returns true if the given mouse wheel event should be used for zooming. This
-   * is invoked if no dialogs are showing and returns true with Alt or Control
-   * (or cmd in macOS only) is pressed.
-   */
-  isZoomWheelEvent(evt) {
-    return (
-      mxEvent.isAltDown(evt) ||
-      (mxEvent.isMetaDown(evt) && mxClient.IS_MAC) ||
-      mxEvent.isControlDown(evt)
-    );
-  }
-
-  /**
-   * Returns true if the given scroll wheel event should be used for scrolling.
-   */
-  isScrollWheelEvent(evt) {
-    return !this.isZoomWheelEvent(evt);
   }
 
   /**
@@ -492,29 +443,14 @@ export class Graph {
    * Private helper method.
    */
   getGlobalVariable(name) {
-    var val: any;
-
-    if (name == "date") {
-      val = new Date().toLocaleDateString();
-    } else if (name == "time") {
-      val = new Date().toLocaleTimeString();
-    } else if (name == "timestamp") {
-      val = new Date().toLocaleString();
-    } else if (name.substring(0, 5) == "date{") {
-      var fmt = name.substring(5, name.length - 1);
-      val = this.formatDate(new Date(), fmt);
-    }
-
-    return val;
+    return GlobalVar.getGlobalVariable(name);
   }
-
-  dateFormatter: DateFormatter;
 
   /**
    * Formats a date, see http://blog.stevenlevithan.com/archives/date-time-format
    */
   formatDate(date, mask, utc?) {
-    return this.dateFormatter.formatDate(date, mask, utc);
+    return DateFormatter.formatDate(date, mask, utc);
   }
 
   /**
@@ -636,36 +572,7 @@ export class Graph {
    * Returns the label for the given cell.
    */
   convertValueToString(cell) {
-    var value = this.model.getValue(cell);
-
-    if (value != null && typeof value == "object") {
-      if (
-        this.isReplacePlaceholders(cell) &&
-        cell.getAttribute("placeholder") != null
-      ) {
-        var name = cell.getAttribute("placeholder");
-        var current = cell;
-        var result = null;
-
-        while (result == null && current != null) {
-          if (current.value != null && typeof current.value == "object") {
-            result = current.hasAttribute(name)
-              ? current.getAttribute(name) != null
-                ? current.getAttribute(name)
-                : ""
-              : null;
-          }
-
-          current = this.model.getParent(current);
-        }
-
-        return result || "";
-      } else {
-        return value.getAttribute("label") || "";
-      }
-    }
-
-    return mxGraph.prototype.convertValueToString.apply(this, [cell]);
+    return this.valueConverter.convertValueToString(cell);
   }
 
   /**
@@ -1046,56 +953,6 @@ export class Graph {
   }
 
   /**
-   * Overridden to limit zoom to 1% - 16.000%.
-   */
-  zoom(factor, center?) {
-    factor =
-      Math.max(0.01, Math.min(this.view.scale * factor, 160)) / this.view.scale;
-    mxGraph.prototype.zoom.apply(this, [factor, center]);
-  }
-
-  /**
-   * Function: zoomIn
-   *
-   * Zooms into the graph by <zoomFactor>.
-   */
-  zoomIn() {
-    // Switches to 1% zoom steps below 15%
-    if (this.view.scale < 0.15) {
-      this.zoom((this.view.scale + 0.01) / this.view.scale);
-    } else {
-      // Uses to 5% zoom steps for better grid rendering in webkit
-      // and to avoid rounding errors for zoom steps
-      this.zoom(
-        Math.round(this.view.scale * this.zoomFactor * 20) /
-          20 /
-          this.view.scale
-      );
-    }
-  }
-
-  /**
-   * Function: zoomOut
-   *
-   * Zooms out of the graph by <zoomFactor>.
-   */
-  zoomOut() {
-    // Switches to 1% zoom steps below 15%
-    if (this.view.scale <= 0.15) {
-      this.zoom((this.view.scale - 0.01) / this.view.scale, null);
-    } else {
-      // Uses to 5% zoom steps for better grid rendering in webkit
-      // and to avoid rounding errors for zoom steps
-      this.zoom(
-        Math.round(this.view.scale * (1 / this.zoomFactor) * 20) /
-          20 /
-          this.view.scale,
-        null
-      );
-    }
-  }
-
-  /**
    * Overrides tooltips to show custom tooltip or metadata.
    */
   getTooltipForCell(cell) {
@@ -1162,6 +1019,18 @@ export class Graph {
     return tip;
   }
 
+  zoom(factor, center?) {
+    this.zoomer.zoom(factor, center);
+  }
+
+  zoomIn() {
+    this.zoomer.zoomIn();
+  }
+
+  zoomOut() {
+    this.zoomer.zoomOut();
+  }
+
   /**
    * Turns the given string into an array.
    */
@@ -1208,9 +1077,6 @@ export class Graph {
     return Zapper.zapGremlins(text);
   }
 
-  /**
-   * Returns true if the given cell is a table.
-   */
   createParent(parent, child, childCount) {
     parent = this.cloneCell(parent);
 
@@ -1219,51 +1085,6 @@ export class Graph {
     }
 
     return parent;
-  }
-
-  /**
-   * Returns true if the given cell is a table.
-   */
-  createTable(rowCount, colCount, w, h) {
-    w = w != null ? w : 40;
-    h = h != null ? h : 30;
-
-    return this.createParent(
-      this.createVertex(
-        null,
-        null,
-        "",
-        0,
-        0,
-        colCount * w,
-        rowCount * h,
-        "html=1;whiteSpace=wrap;container=1;collapsible=0;childLayout=tableLayout;"
-      ),
-      this.createParent(
-        this.createVertex(
-          null,
-          null,
-          "",
-          0,
-          0,
-          colCount * w,
-          h,
-          "html=1;whiteSpace=wrap;container=1;collapsible=0;points=[[0,0.5],[1,0.5]];part=1;"
-        ),
-        this.createVertex(
-          null,
-          null,
-          "",
-          0,
-          0,
-          w,
-          h,
-          "html=1;whiteSpace=wrap;connectable=0;part=1;"
-        ),
-        colCount
-      ),
-      rowCount
-    );
   }
 
   /**

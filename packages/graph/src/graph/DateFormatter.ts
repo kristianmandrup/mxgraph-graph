@@ -1,10 +1,10 @@
-class DateFormatter {
-  dateFormatCache: any;
+export class DateFormatter {
+  static dateFormatCache: any;
 
   /**
    * Formats a date, see http://blog.stevenlevithan.com/archives/date-time-format
    */
-  formatDate(date, mask, utc?) {
+  static formatDate(date, mask, utc?) {
     // LATER: Cache regexs
     if (this.dateFormatCache == null) {
       this.dateFormatCache = {
