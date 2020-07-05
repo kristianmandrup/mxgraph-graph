@@ -56,17 +56,27 @@ describe("Svg", () => {
       });
 
       describe("getSvg(opts)", () => {
+        const background = "x";
+        const scale = 2;
+        const border = 1;
+        const nocrop = true;
+        const ignoreSelection = false;
+        const hasShadow = false;
+        const showText = true;
+        const imgExport = null;
+        const linkTarget = "x";
+        const crisp = false;
         const opts = {
-          // background,
-          // scale,
-          // border,
-          // nocrop,
-          // crisp,
-          // ignoreSelection,
-          // showText,
-          // imgExport,
-          // linkTarget,
-          // hasShadow,
+          background,
+          scale,
+          border,
+          nocrop,
+          crisp,
+          ignoreSelection,
+          showText,
+          imgExport,
+          linkTarget,
+          hasShadow,
         };
         it("creates", () => {
           expect(() => instance.getSvg(opts)).not.toThrow();

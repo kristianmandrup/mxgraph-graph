@@ -21,3 +21,4 @@ export * from "./DateFormatter";
 export * from "./CustomLinks";
 export * from "./GraphContainerInitializer";
 export * from "./GraphTableManager";
+export * from "./LayersDialog";
