@@ -41,6 +41,8 @@ import { GraphInitializer } from "../initializer";
 import { GlobalVar } from "./GlobalVar";
 import { DateFormatter } from "./DateFormatter";
 import { ValueConverter } from "./ValueConverter";
+import { LabelExtracter } from "./LabelExtracter";
+import { CellFolder } from "./CellFolder";
 const { urlParams } = resources;
 
 /**
@@ -145,6 +147,8 @@ export class Graph {
   graphInitializer: GraphContainerInitializer;
   wheelEvent: WheelEvent;
   valueConverter: ValueConverter;
+  labelExtracter: LabelExtracter;
+  cellFolder: CellFolder;
 
   /**
    * Graph inherits from mxGraph
@@ -164,6 +168,8 @@ export class Graph {
     this.graphInitializer = new GraphContainerInitializer(this);
     this.wheelEvent = new WheelEvent();
     this.valueConverter = new ValueConverter(this);
+    this.labelExtracter = new LabelExtracter(this);
+    this.cellFolder = new CellFolder(this);
     this.initialize(opts);
   }
 
@@ -526,10 +532,6 @@ export class Graph {
     }
   }
 
-  getLabel(cell) {
-    return this.placeholderManager.getLabel(cell);
-  }
-
   isReplacePlaceholders(cell) {
     return this.placeholderManager.isReplacePlaceholders(cell);
   }
@@ -542,37 +544,14 @@ export class Graph {
    * Returns all labels in the diagram as a string.
    */
   getIndexableText() {
-    var tmp = document.createElement("div");
-    var labels: any[] = [];
-    var label = "";
-
-    for (var key in this.model.cells) {
-      var cell = this.model.cells[key];
-
-      if (this.model.isVertex(cell) || this.model.isEdge(cell)) {
-        if (this.isHtmlLabel(cell)) {
-          tmp.innerHTML = this.getLabel(cell);
-          label = mxUtils.extractTextWithWhitespace([tmp]);
-        } else {
-          label = this.getLabel(cell);
-        }
-
-        label = mxUtils.trim(label.replace(/[\x00-\x1F\x7F-\x9F]|\s+/g, " "));
-
-        if (label.length > 0) {
-          labels.push(label);
-        }
-      }
-    }
-
-    return labels.join(" ");
+    return this.labelExtracter.getIndexableText();
   }
 
   /**
    * Returns the label for the given cell.
    */
   convertValueToString(cell) {
-    return this.valueConverter.convertValueToString(cell);
+    return this.labelExtracter.convertValueToString(cell);
   }
 
   /**
@@ -660,154 +639,14 @@ export class Graph {
   /**
    * Adds Shift+collapse/expand and size management for folding inside stack
    */
-  isMoveCellsEvent(evt, state) {
-    return (
-      mxEvent.isShiftDown(evt) ||
-      mxUtils.getValue(state.style, "moveCells", "0") == "1"
-    );
-  }
-
-  /**
-   * Adds Shift+collapse/expand and size management for folding inside stack
-   */
   foldCells(collapse, recurse, cells, checkFoldable, evt) {
-    recurse = recurse != null ? recurse : false;
-
-    if (cells == null) {
-      cells = this.getFoldableCells(this.getSelectionCells(), collapse);
-    }
-
-    if (cells != null) {
-      this.model.beginUpdate();
-
-      try {
-        mxGraph.prototype.foldCells.apply(this, [
-          collapse,
-          recurse,
-          cells,
-          checkFoldable,
-          evt,
-        ]);
-
-        // Resizes all parent stacks if alt is not pressed
-        if (this.layoutManager != null) {
-          for (var i = 0; i < cells.length; i++) {
-            var state = this.view.getState(cells[i]);
-            var geo = this.getCellGeometry(cells[i]);
-
-            if (state != null && geo != null) {
-              var dx = Math.round(geo.width - state.width / this.view.scale);
-              var dy = Math.round(geo.height - state.height / this.view.scale);
-
-              if (dy != 0 || dx != 0) {
-                var parent = this.model.getParent(cells[i]);
-                var layout = this.layoutManager.getLayout(parent);
-
-                if (layout == null) {
-                  // Moves cells to the right and down after collapse/expand
-                  if (evt != null && this.isMoveCellsEvent(evt, state)) {
-                    this.moveSiblings(state, parent, dx, dy);
-                  }
-                } else if (
-                  (evt == null || !mxEvent.isAltDown(evt)) &&
-                  layout.constructor == mxStackLayout &&
-                  !layout.resizeLast
-                ) {
-                  this.resizeParentStacks(parent, layout, dx, dy);
-                }
-              }
-            }
-          }
-        }
-      } finally {
-        this.model.endUpdate();
-      }
-
-      // Selects cells after folding
-      if (this.isEnabled()) {
-        this.setSelectionCells(cells);
-      }
-    }
-  }
-
-  /**
-   * Overrides label orientation for collapsed swimlanes inside stack.
-   */
-  moveSiblings(state, parent, dx, dy) {
-    this.model.beginUpdate();
-    try {
-      var cells = this.getCellsBeyond(state.x, state.y, parent, true, true);
-
-      for (var i = 0; i < cells.length; i++) {
-        if (cells[i] != state.cell) {
-          var tmp = this.view.getState(cells[i]);
-          var geo = this.getCellGeometry(cells[i]);
-
-          if (tmp != null && geo != null) {
-            geo = geo.clone();
-            geo.translate(
-              Math.round(
-                dx * Math.max(0, Math.min(1, (tmp.x - state.x) / state.width))
-              ),
-              Math.round(
-                dy * Math.max(0, Math.min(1, (tmp.y - state.y) / state.height))
-              )
-            );
-            this.model.setGeometry(cells[i], geo);
-          }
-        }
-      }
-    } finally {
-      this.model.endUpdate();
-    }
-  }
-
-  /**
-   * Overrides label orientation for collapsed swimlanes inside stack.
-   */
-  resizeParentStacks(parent, layout, dx, dy) {
-    if (
-      this.layoutManager != null &&
-      layout != null &&
-      layout.constructor == mxStackLayout &&
-      !layout.resizeLast
-    ) {
-      this.model.beginUpdate();
-      try {
-        var dir = layout.horizontal;
-
-        // Bubble resize up for all parent stack layouts with same orientation
-        while (
-          parent != null &&
-          layout != null &&
-          layout.constructor == mxStackLayout &&
-          layout.horizontal == dir &&
-          !layout.resizeLast
-        ) {
-          var pgeo = this.getCellGeometry(parent);
-          var pstate = this.view.getState(parent);
-
-          if (pstate != null && pgeo != null) {
-            pgeo = pgeo.clone();
-
-            if (layout.horizontal) {
-              pgeo.width +=
-                dx + Math.min(0, pstate.width / this.view.scale - pgeo.width);
-            } else {
-              pgeo.height +=
-                dy + Math.min(0, pstate.height / this.view.scale - pgeo.height);
-            }
-
-            this.model.setGeometry(parent, pgeo);
-          }
-
-          parent = this.model.getParent(parent);
-          layout = this.layoutManager.getLayout(parent);
-        }
-      } finally {
-        this.model.endUpdate();
-      }
-    }
+    return this.cellFolder.foldCells(
+      collapse,
+      recurse,
+      cells,
+      checkFoldable,
+      evt
+    );
   }
 
   /**

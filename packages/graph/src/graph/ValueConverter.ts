@@ -1,12 +1,15 @@
 import mx from "@mxgraph-app/mx";
 import { Graph } from ".";
+import { PlaceholderManager } from "./PlaceholderManager";
 const { mxGraph } = mx;
 
 export class ValueConverter {
   graph: any;
+  placeholderManager: PlaceholderManager;
 
   constructor($graph: Graph) {
     this.graph = $graph;
+    this.placeholderManager = new PlaceholderManager($graph);
   }
 
   get view() {
@@ -18,7 +21,7 @@ export class ValueConverter {
   }
 
   isReplacePlaceholders(cell) {
-    return this.graph.isReplacePlaceholders(cell);
+    return this.placeholderManager.isReplacePlaceholders(cell);
   }
 
   /**
