@@ -11,6 +11,10 @@ export class CellFolder {
   getCellsBeyond: any; // (cell) => [any]
   isEnabled: any;
 
+  isCellLocked: any; // (cell)
+  foldingEnabled: boolean = true;
+  getCurrentCellStyle: any;
+
   constructor($graph: Graph) {
     this.graph = $graph;
   }
@@ -26,6 +30,26 @@ export class CellFolder {
   get layoutManager() {
     return this.graph.layoutManager;
   }
+
+  isContainer(cell) {
+    return this.graph.isContainer(cell);
+  }
+
+  /**
+   * Disables folding for non-swimlanes.
+   */
+  isCellFoldable(cell) {
+    var style = this.getCurrentCellStyle(cell);
+
+    return (
+      this.foldingEnabled &&
+      (style["treeFolding"] == "1" ||
+        (!this.isCellLocked(cell) &&
+          ((this.isContainer(cell) && style["collapsible"] != "0") ||
+            (!this.isContainer(cell) && style["collapsible"] == "1"))))
+    );
+  }
+
   /**
    * Adds Shift+collapse/expand and size management for folding inside stack
    */
