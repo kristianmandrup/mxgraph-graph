@@ -1,7 +1,7 @@
 import mx from "@mxgraph-app/mx";
-import { SvgImage } from "./SvgImage";
-import { CellTooltip } from "./CellTooltip";
-import { LayersDialog } from "./LayersDialog";
+import { SvgImage } from "./svg/SvgImage";
+import { CellTooltip } from "./cell";
+import { LayersDialog } from "./layers";
 
 type GraphOpts = { renderHint?; stylesheet?; themes?; standalone? };
 
@@ -25,25 +25,23 @@ const {
 } = mx;
 
 import resources from "@mxgraph-app/resources";
-import { GraphContainerInitializer } from "./GraphContainerInitializer";
+import { GraphContainerInitializer } from "./container";
 import { GraphCssTransformConfig } from "./css";
-import { LinkManager } from "./LinkManager";
-import { Zapper } from "./Zapper";
-import { Compresser } from "./Compresser";
-import { Sanitizer } from "./Sanitizer";
-import { PlaceholderManager } from "./PlaceholderManager";
-import { CustomLinks } from "./CustomLinks";
-import { TableChecker } from "./TableChecker";
-import { VertexConnecter } from "./VertexConnecter";
-import { StringBytesConverter } from "./StringBytesConverter";
-import { Zoomer } from "./Zoomer";
-import { WheelEvent } from "./WheelEvent";
+import { LinkManager, CustomLinks } from "./links";
+import { Zapper } from "./zapper";
+import { Compresser } from "./compress";
+import { Sanitizer } from "./sanitizer";
+import { PlaceholderManager } from "./placeholder";
+import { TableChecker } from "./table";
+import { VertexConnecter } from "./vertex";
+import { StringBytesConverter, ValueConverter } from "./converter";
+import { Zoomer } from "./zoom";
+import { WheelEvent } from "./wheel";
 import { GraphInitializer } from "../initializer";
-import { GlobalVar } from "./GlobalVar";
-import { DateFormatter } from "./DateFormatter";
-import { ValueConverter } from "./ValueConverter";
-import { LabelExtracter } from "./LabelExtracter";
-import { CellFolder } from "./CellFolder";
+import { GlobalVar } from "./global";
+import { DateFormatter } from "./date";
+import { LabelExtracter } from "./label";
+import { CellFolder } from "./cell";
 const { urlParams } = resources;
 
 /**

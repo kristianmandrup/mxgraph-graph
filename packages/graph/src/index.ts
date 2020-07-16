@@ -13,4 +13,3 @@ export * from "./rotation";
 export * from "./stylesheet";
 export * from "./styling";
 export * from "./svg";
-export * from "./table";
